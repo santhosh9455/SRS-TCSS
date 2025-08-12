@@ -18,8 +18,6 @@ public class StudentResDto {
 
     private Long id;
 
-    private String name;
-
     private Integer age;
 
     private String gender;
@@ -42,7 +40,7 @@ public class StudentResDto {
 
     private String profileImagePath;
 
-    private String marksheetImagePath;
+    private String marksheetImagePath12th;
 
     private List<Long> subjectId;
 
@@ -51,5 +49,63 @@ public class StudentResDto {
     private String username;
 
     private LocalDate dateOfBirth;
+
+    private String address;
+
+    private String city;
+
+    private String state;
+
+    private String pincode;
+
+    private String country;
+
+    private LocalDate admission_date;
+
+    private String guardianName;
+
+    private String guardian_phone;
+
+    private LocalDate created_at;
+
+    private LocalDate updated_at;
+
+    private String enrollment_status;
+
+    private String ugCertificate;
+
+    private String firstName;
+
+    private String lastName;
+
+    private String programmeLevel;
+
+    private String programmeOfStudy;
+
+    private String aadharNumber;
+
+    private String fatherName;
+
+    private String fatherMobile;
+
+    private String fatherOccupation;
+
+    private String motherName;
+
+    private String motherMobile;
+
+    private String motherOccupation;
+
+    private String street;
+
+    private String taluk;
+
+    private String schoolName;
+
+    private String hostelBusService;
+
+    private String boardingPoint;
+
+    private String  marksheetImagePath10th;
 
 }

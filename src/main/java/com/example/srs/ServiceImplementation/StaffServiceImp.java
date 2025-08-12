@@ -77,7 +77,7 @@ public class StaffServiceImp implements StaffService {
     private GetCourseRequestDto mapToGetCourseRequestDto(StudentEntity student) {
         GetCourseRequestDto dto = new GetCourseRequestDto();
         dto.setId(student.getId());
-        dto.setStudentName(student.getName());
+        dto.setStudentName(student.getFirstName());
         dto.setEmail(student.getEmail());
         dto.setCourseName(student.getCourse().getCourseName());
         dto.setDepartmentName(student.getDepartment().getDepartmentName());
@@ -296,7 +296,7 @@ public class StaffServiceImp implements StaffService {
     <p>Best regards,</p>
     <p><em>Staff Coordination Team</em><br>
     <strong>Don Bosco College</strong></p>
-""".formatted(saved.getName());
+""".formatted(saved.getFirstName());
 
         // 8. Send confirmation email
         emailService.sendHtmlEmail(
@@ -365,7 +365,7 @@ public class StaffServiceImp implements StaffService {
     <p>Best regards,</p>
     <p><em>Staff Coordination Team</em><br>
     <strong>Don Bosco College</strong></p>
-""".formatted(saved.getName());
+""".formatted(saved.getFirstName());
 
         // 8. Send confirmation email
         emailService.sendHtmlEmail(
@@ -476,7 +476,7 @@ public class StaffServiceImp implements StaffService {
     StudentResDto dto = new StudentResDto();
 
     dto.setId(entity.getId());
-    dto.setName(entity.getName());
+    dto.setFirstName(entity.getFirstName());
     dto.setAge(entity.getAge());
     dto.setGender(entity.getGender());
     dto.setEmail(entity.getEmail());

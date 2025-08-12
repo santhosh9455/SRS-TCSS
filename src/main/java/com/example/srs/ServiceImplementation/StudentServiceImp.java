@@ -52,75 +52,7 @@ public class StudentServiceImp implements StudentService {
     @Autowired
     private SubjectRepo subjectRepo;
 
-    @Override
-    public StudentResDto RegisterRequest(StudentRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage) {
 
-        if (profileImage == null || profileImage.isEmpty()) {
-            throw new IllegalArgumentException("Profile image is required");
-        }
-        if (marksheetImage == null || marksheetImage.isEmpty()) {
-            throw new IllegalArgumentException("Marksheet image is required");
-        }
-
-        // 1. Validate Department
-        DepartmentEntity dept = deptRepo.findById(dto.getDepartmentId()).orElseThrow(() -> new RuntimeException("Department '" + dto.getDepartmentId() + "' not found"));
-
-        int age = 0;
-        if (dto.getDateOfBirth() != null) {
-            age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
-        }
-
-        // 2. Create and populate StudentEntity
-        StudentEntity student = new StudentEntity();
-        student.setName(dto.getName());
-        student.setAge(age);
-        student.setDateOfBirth(dto.getDateOfBirth());
-        student.setGender(dto.getGender());
-        student.setEmail(dto.getEmail());
-        student.setPhoneNumber(dto.getPhoneNumber());
-        student.setDepartment(dept);
-        // 3. Handle file upload (stores only paths)
-        try {
-            String uploadDir = "uploads/students/";
-            Files.createDirectories(Paths.get(uploadDir));
-
-            // Save profile image
-            String profileImageName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
-            Path profileImagePath = Paths.get(uploadDir + profileImageName);
-            Files.copy(profileImage.getInputStream(), profileImagePath, StandardCopyOption.REPLACE_EXISTING);
-            student.setProfileImagePath("/" + uploadDir + profileImageName);
-
-            // Save marksheet image
-            String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage.getOriginalFilename());
-            Path marksheetImagePath = Paths.get(uploadDir + marksheetImageName);
-            Files.copy(marksheetImage.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
-            student.setMarksheetImagePath("/" + uploadDir + marksheetImageName);
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store student documents", e);
-        }
-
-        // 4. Save to DB
-        StudentEntity savedStudent = studentRepo.save(student);
-
-        emailService.sendSimpleEmail(
-                savedStudent.getEmail(),
-                "Your Registration Request was successfully sent",
-                "Hi " + savedStudent.getName() + ",\n\n" +
-                        "Your registration request has been successfully submitted to the HOD. " +
-                        "You will be notified once it's approved.\n\nBest Regards,\nAdmin"
-        );
-
-        // 6. Notify HOD (hardcoded or fetched)
-        emailService.sendSimpleEmail(
-                "santhoshkumar@dbcyelagiri.edu.in",
-                savedStudent.getName() + " sent a registration request",
-                "Student " + savedStudent.getName() + " has requested registration.\nPlease review and approve it."
-        );
-
-        // 6. Return DTO
-        return mapToDto(savedStudent);
-    }
 
 
     private String getFileExtension(String filename) {
@@ -163,49 +95,83 @@ public class StudentServiceImp implements StudentService {
         }
 
         StudentResDto dto = new StudentResDto();
+
+        // Basic Info
         dto.setId(student.getId());
-        dto.setName(student.getName());
+        dto.setFirstName(student.getFirstName());
+        dto.setLastName(student.getLastName());
         dto.setAge(student.getAge());
+        dto.setDateOfBirth(student.getDateOfBirth());
         dto.setGender(student.getGender());
         dto.setEmail(student.getEmail());
         dto.setPhoneNumber(student.getPhoneNumber());
-        dto.setStatus(student.getStatus().toString());
+        dto.setStatus(student.getStatus() != null ? student.getStatus().name() : "PENDING");
+        dto.setCourseStatus(student.getCourseStatus() != null ? student.getCourseStatus().name() : "NOT_SPECIFIED");
 
-        // Handle course status
-        dto.setCourseStatus(student.getCourseStatus() != null ?
-                student.getCourseStatus().name() :
-                "NOT_SPECIFIED");
+        // Academic Info
+        dto.setProgrammeLevel(student.getProgrammeLevel());
+        dto.setProgrammeOfStudy(student.getProgrammeOfStudy());
+        dto.setAadharNumber(student.getAadharNumber());
 
-        // Handle department - using the direct entity relationship
+        // Parents / Guardian Info
+        dto.setFatherName(student.getFatherName());
+        dto.setFatherMobile(student.getFatherMobile());
+        dto.setFatherOccupation(student.getFatherOccupation());
+        dto.setMotherName(student.getMotherName());
+        dto.setMotherMobile(student.getMotherMobile());
+        dto.setMotherOccupation(student.getMotherOccupation());
+        dto.setGuardianName(student.getGuardianName());
+        dto.setGuardian_phone(student.getGuardian_phone());
+
+        // Address Info
+        dto.setStreet(student.getStreet());
+        dto.setTaluk(student.getTaluk());
+        dto.setCity(student.getCity());
+        dto.setState(student.getState());
+        dto.setPincode(student.getPincode());
+        dto.setCountry(student.getCountry());
+
+        // Other Info
+        dto.setSchoolName(student.getSchoolName());
+        dto.setHostelBusService(student.getHostelBusService());
+        dto.setBoardingPoint(student.getBoardingPoint());
+        dto.setAdmission_date(student.getAdmission_date());
+        dto.setCreated_at(student.getCreated_at());
+        dto.setUpdated_at(student.getUpdated_at());
+        dto.setEnrollment_status(student.getEnrollment_status());
+
+        // Department
         if (student.getDepartment() != null) {
             dto.setDepartmentName(student.getDepartment().getDepartmentName());
-
         } else {
             dto.setDepartmentName("Not Assigned");
         }
 
-        // Handle course
+        // Course
         if (student.getCourse() != null) {
             dto.setCourseName(student.getCourse().getCourseName());
         } else {
             dto.setCourseName("Not Enrolled");
         }
 
-        // Handle subject
-
-// Option 1: If dto.setSubjectName() expects a List<String> (subject names)
+        // Subjects
         if (student.getSubjects() != null && !student.getSubjects().isEmpty()) {
-            List<String> subjectNames = student.getSubjects().stream()
-                    .map(SubjectEntity::getSubjectName) // Assuming getName() method exists
-                    .collect(Collectors.toList());
-            dto.setSubjectName(subjectNames);
+            dto.setSubjectName(student.getSubjects().stream()
+                    .map(SubjectEntity::getSubjectName)
+                    .collect(Collectors.toList()));
         } else {
             dto.setSubjectName(Collections.singletonList("Not Registered"));
         }
 
+        // File Paths
         dto.setProfileImagePath(student.getProfileImagePath());
-        dto.setMarksheetImagePath(student.getMarksheetImagePath());
-        dto.setUsername(student.getUser().getUsername());
+        dto.setMarksheetImagePath10th(student.getMarksheetImagePath10th());
+        dto.setMarksheetImagePath12th(student.getMarksheetImagePath12th());
+        dto.setUgCertificate(student.getUgCertificate());
+
+        // User Info
+        dto.setUsername(student.getUser() != null ? student.getUser().getUsername() : null);
+
         return dto;
     }
 
@@ -240,35 +206,44 @@ public class StudentServiceImp implements StudentService {
         student.setCourseStatus(CourseRequestStatusEnum.PENDING);
         StudentEntity updatedStudent = studentRepo.save(student);
 
-        // Step 7: Send confirmation emails
         String email = updatedStudent.getEmail();
-        String name = updatedStudent.getName();
+        String fullName = updatedStudent.getFirstName() + " " + updatedStudent.getLastName();
         String courseName = course.getCourseName();
 
-        // Email to student
-        emailService.sendSimpleEmail(
-                email,
-                "Course Registration Request Submitted",
-                String.format(
-                        "Dear %s,\n\n" +
-                                "Your course registration request for **%s** has been successfully submitted and is currently under review.\n\n" +
-                                "Once approved, you will receive a confirmation email from the Head of Department (HOD).\n\n" +
-                                "Thank you for your interest.\n\nBest regards,\nAdmin Team",
-                        name, courseName
-                )
+// Email to student (HTML)
+        String studentSubject = "Course Registration Request Submitted";
+        String studentBodyHtml = String.format(
+                "<html>" +
+                        "<body style='font-family: Arial, sans-serif; line-height: 1.6;'>" +
+                        "<h2 style='color:#2E86C1;'>Dear %s,</h2>" +
+                        "<p>Your course registration request for the course <strong>%s</strong> has been successfully submitted and is currently under review.</p>" +
+                        "<p>Once approved, you will receive a confirmation email from the Head of Department (HOD).</p>" +
+                        "<p>Thank you for your interest in our institution.</p>" +
+                        "<br>" +
+                        "<p>Best regards,<br><strong>Admin Team</strong></p>" +
+                        "</body>" +
+                        "</html>",
+                fullName, courseName
         );
 
-        // Email to admin
-        emailService.sendSimpleEmail(
-                "santhoshkumar@dbcyelagiri.edu.in",
-                String.format("%s has submitted a course registration request", name),
-                String.format(
-                        "Dear Admin,\n\n" +
-                                "Student **%s** has requested to register for the course **%s**.\n\n" +
-                                "Please review the request and take the necessary action.\n\nBest regards,\nCourse Registration System",
-                        name, courseName
-                )
+// Email to admin (HTML)
+        String adminSubject = String.format("%s has submitted a course registration request", fullName);
+        String adminBodyHtml = String.format(
+                "<html>" +
+                        "<body style='font-family: Arial, sans-serif; line-height: 1.6;'>" +
+                        "<h2 style='color:#C0392B;'>Dear Admin,</h2>" +
+                        "<p>Student <strong>%s</strong> has requested to register for the course <strong>%s</strong>.</p>" +
+                        "<p>Please review the request and take the necessary action.</p>" +
+                        "<br>" +
+                        "<p>Best regards,<br><strong>Course Registration System</strong></p>" +
+                        "</body>" +
+                        "</html>",
+                fullName, courseName
         );
+
+// Send emails as HTML
+        emailService.sendHtmlEmail(email, studentSubject, studentBodyHtml);
+        emailService.sendHtmlEmail("santhoshkumar@dbcyelagiri.edu.in", adminSubject, adminBodyHtml);
 
         // Step 8: Return student response DTO
         return mapToStudentDto(updatedStudent);
@@ -351,6 +326,106 @@ public class StudentServiceImp implements StudentService {
         return coursePage.map(this::mapToDto);
     }
 
+    @Override
+    public StudentResDto RegisterRequest(StudentRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage10th, MultipartFile marksheetImage12th, MultipartFile ugCertificate) {
+        if (profileImage == null || profileImage.isEmpty()) {
+            throw new IllegalArgumentException("Profile image is required");
+        }
+        if (marksheetImage10th == null || marksheetImage10th.isEmpty()) {
+            throw new IllegalArgumentException("10th Marksheet is required");
+        }
+        if (marksheetImage12th == null || marksheetImage12th.isEmpty()) {
+            throw new IllegalArgumentException("12th Marksheet is required");
+        }
+
+        // Department validation
+        DepartmentEntity dept = deptRepo.findById(dto.getDepartmentId())
+                .orElseThrow(() -> new RuntimeException("Department '" + dto.getDepartmentId() + "' not found"));
+
+        int age = 0;
+        if (dto.getDateOfBirth() != null) {
+            age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
+        }
+
+        StudentEntity student = new StudentEntity();
+        student.setAge(age);
+        student.setFirstName(dto.getFirstName());
+        student.setFatherName(dto.getFatherName());
+        student.setLastName(dto.getLastName());
+        student.setFatherMobile(dto.getFatherMobile());
+        student.setMotherName(dto.getMotherName());
+        student.setMotherMobile(dto.getMotherMobile());
+        student.setDateOfBirth(dto.getDateOfBirth());
+        student.setGender(dto.getGender());
+        student.setEmail(dto.getEmail());
+        student.setCity(dto.getCity());
+        student.setState(dto.getState());
+        student.setPincode(dto.getPincode());
+        student.setCountry(dto.getCountry());
+        student.setGuardianName(dto.getGuardianName());
+        student.setGuardian_phone(dto.getGuardianPhone());
+        student.setEnrollment_status("PENDDING");
+        student.setAdmission_date(LocalDate.now());
+        student.setPhoneNumber(dto.getPhoneNumber());
+        student.setDepartment(dept);
+        student.setCreated_at(LocalDate.now());
+        student.setUpdated_at(LocalDate.now());
+
+        try {
+            String uploadDir = "uploads/students/";
+            Files.createDirectories(Paths.get(uploadDir));
+
+            // Save profile image
+            String profileImageName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
+            Path profileImagePath = Paths.get(uploadDir + profileImageName);
+            Files.copy(profileImage.getInputStream(), profileImagePath, StandardCopyOption.REPLACE_EXISTING);
+            student.setProfileImagePath("/" + uploadDir + profileImageName);
+
+            // Save 10th marksheet
+            String marksheet10thName = "marksheet10th_" + UUID.randomUUID() + getFileExtension(marksheetImage10th.getOriginalFilename());
+            Path marksheet10thPath = Paths.get(uploadDir + marksheet10thName);
+            Files.copy(marksheetImage10th.getInputStream(), marksheet10thPath, StandardCopyOption.REPLACE_EXISTING);
+            student.setMarksheetImagePath10th("/" + uploadDir + marksheet10thName);
+
+            // Save 12th marksheet
+            String marksheet12thName = "marksheet12th_" + UUID.randomUUID() + getFileExtension(marksheetImage12th.getOriginalFilename());
+            Path marksheet12thPath = Paths.get(uploadDir + marksheet12thName);
+            Files.copy(marksheetImage12th.getInputStream(), marksheet12thPath, StandardCopyOption.REPLACE_EXISTING);
+            student.setMarksheetImagePath12th("/" + uploadDir + marksheet12thName);
+
+            // Save UG certificate if provided
+            if (ugCertificate != null && !ugCertificate.isEmpty()) {
+                String ugCertName = "ugCertificate_" + UUID.randomUUID() + getFileExtension(ugCertificate.getOriginalFilename());
+                Path ugCertPath = Paths.get(uploadDir + ugCertName);
+                Files.copy(ugCertificate.getInputStream(), ugCertPath, StandardCopyOption.REPLACE_EXISTING);
+                student.setUgCertificate("/" + uploadDir + ugCertName);
+            }
+
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store student documents", e);
+        }
+
+        StudentEntity savedStudent = studentRepo.save(student);
+
+        // Email to student
+        emailService.sendSimpleEmail(
+                savedStudent.getEmail(),
+                "Your Registration Request was successfully sent",
+                "Hi " + savedStudent.getFirstName() + ",\n\n" +
+                        "Your registration request has been successfully submitted to the HOD. " +
+                        "You will be notified once it's approved.\n\nBest Regards,\nAdmin"
+        );
+
+        // Email to HOD
+        emailService.sendSimpleEmail(
+                "santhoshkumar@dbcyelagiri.edu.in",
+                savedStudent.getFirstName() + " sent a registration request",
+                "Student " + savedStudent.getFirstName() + " has requested registration.\nPlease review and approve it."
+        );
+
+        return mapToDto(savedStudent);
+    }
+
     private CourseResDto mapToDto(CourseEntity course) {
         CourseResDto core = new CourseResDto();
         core.setId(course.getId());
@@ -370,7 +445,6 @@ public class StudentServiceImp implements StudentService {
     private StudentResDto mapToStudentDto(StudentEntity student) {
         StudentResDto dto = new StudentResDto();
         dto.setId(student.getId());
-        dto.setName(student.getName());
         dto.setCourseName(student.getCourse().getCourseName());
         // add other fields as needed
         return dto;
@@ -396,19 +470,63 @@ public class StudentServiceImp implements StudentService {
 
 
     public StudentResDto mapToDto(StudentEntity student) {
+        if (student == null) {
+            throw new IllegalArgumentException("Student entity cannot be null");
+        }
+
         StudentResDto dto = new StudentResDto();
         dto.setId(student.getId());
-        dto.setName(student.getName());
         dto.setDateOfBirth(student.getDateOfBirth());
         dto.setAge(student.getAge());
         dto.setGender(student.getGender());
         dto.setEmail(student.getEmail());
         dto.setPhoneNumber(student.getPhoneNumber());
-        dto.setDepartmentName(student.getDepartment().getDepartmentName());
-        dto.setStatus(student.getStatus().toString());
-        dto.setCourseName(student.getCourseStatus().name());
-        dto.setMarksheetImagePath(student.getMarksheetImagePath());
+
+        // Department check
+        dto.setDepartmentName(student.getDepartment() != null
+                ? student.getDepartment().getDepartmentName()
+                : "Not Assigned");
+
+        // Status check
+        dto.setStatus(student.getStatus() != null
+                ? student.getStatus().toString()
+                : "PENDING");
+
+        // Course status
+        dto.setCourseName(student.getCourseStatus() != null
+                ? student.getCourseStatus().name()
+                : "NOT_SPECIFIED");
+
+        // Address fields
+        dto.setStreet(student.getStreet());
+        dto.setTaluk(student.getTaluk());
+        dto.setCity(student.getCity());
+        dto.setState(student.getState());
+        dto.setPincode(student.getPincode());
+        dto.setCountry(student.getCountry());
+
+        // Guardian details
+        dto.setGuardianName(student.getGuardianName());
+        dto.setGuardian_phone(student.getGuardian_phone());
+
+        // Dates
+        dto.setAdmission_date(student.getAdmission_date());
+        dto.setCreated_at(student.getCreated_at());
+        dto.setUpdated_at(student.getUpdated_at());
+
+        // Enrollment status
+        dto.setEnrollment_status(student.getEnrollment_status());
+
+        // Document paths
         dto.setProfileImagePath(student.getProfileImagePath());
+        dto.setMarksheetImagePath10th(student.getMarksheetImagePath10th());
+        dto.setMarksheetImagePath12th(student.getMarksheetImagePath12th());
+        dto.setUgCertificate(student.getUgCertificate());
+
+        // Username
+        dto.setUsername(student.getUser() != null ? student.getUser().getUsername() : null);
+
         return dto;
     }
+
 }

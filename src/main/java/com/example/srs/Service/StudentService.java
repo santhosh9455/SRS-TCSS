@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface StudentService {
 
-    StudentResDto RegisterRequest(StudentRequestDto dto,MultipartFile profileImage,MultipartFile marksheetImage);
+    
 
     StudentResDto getStudent();
 
@@ -24,4 +24,6 @@ public interface StudentService {
     List<CourseResDto> courseList();
 
     Page<CourseResDto> getFilteredCourses(String search, int page, int size);
+
+    StudentResDto RegisterRequest(StudentRequestDto form, MultipartFile profileImage, MultipartFile marksheetImage10th, MultipartFile marksheetImage12th, MultipartFile ugCertificate);
 }

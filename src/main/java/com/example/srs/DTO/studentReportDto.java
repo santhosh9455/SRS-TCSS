@@ -13,7 +13,9 @@ import lombok.ToString;
 public class studentReportDto {
 
     @CsvBindByName
-    private String name;
+    private String FirstName;
+    @CsvBindByName
+    private String LastName;
     @CsvBindByName
     private Integer age;
     @CsvBindByName

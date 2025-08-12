@@ -80,7 +80,7 @@ public class HodServiceImp implements HodService {
 
         // 4. Check if already approved
         if (student.getStatus() == StatusEnum.APPROVED) {
-            throw new RuntimeException("Student " + student.getName() + " is already approved.");
+            throw new RuntimeException("Student " + student.getFirstName() + " is already approved.");
         }
 
         // 5. Approve and save
@@ -91,7 +91,7 @@ public class HodServiceImp implements HodService {
         emailService.sendSimpleEmail(
                 saved.getEmail(),
                 "Your registration request has been approved",
-                saved.getName() + ", your registration request has been approved by HOD.\nWelcome to the department! \n" +
+                saved.getFirstName() + ", your registration request has been approved by HOD.\nWelcome to the department! \n" +
                         "Other details will be in our website once you got the Authentication details you can see that" +
                         "\n Best regards," +
                         "\n Head of the department"
@@ -102,34 +102,49 @@ public class HodServiceImp implements HodService {
 
     private StudentResDto mapToDto(StudentEntity entity) {
         StudentResDto dto = new StudentResDto();
+
+        if (entity == null) {
+            return dto;
+        }
+
         dto.setId(entity.getId());
-        dto.setName(entity.getName());
         dto.setAge(entity.getAge());
         dto.setDateOfBirth(entity.getDateOfBirth());
         dto.setGender(entity.getGender());
         dto.setEmail(entity.getEmail());
         dto.setPhoneNumber(entity.getPhoneNumber());
         dto.setStatus(entity.getStatus() != null ? entity.getStatus().toString() : "PENDING");
-        dto.setDepartmentName(entity.getDepartment().getDepartmentName());
 
-        // Safely check if user is not null before accessing username
+        // Department
+        if (entity.getDepartment() != null) {
+            dto.setDepartmentName(entity.getDepartment().getDepartmentName());
+            dto.setDepartmentId(entity.getDepartment().getId());
+        } else {
+            dto.setDepartmentName("Not Assigned");
+            dto.setDepartmentId(null);
+        }
+
+        // Username
         if (entity.getUser() != null && entity.getUser().getUsername() != null) {
             dto.setUsername(entity.getUser().getUsername());
         } else {
             dto.setUsername("Not Found");
         }
-        // Safely handle null course
-        dto.setCourseName(
-                entity.getCourse() != null ? entity.getCourse().getCourseName() : "Not Assigned"
-        );
 
-        dto.setCourseId(
-                entity.getCourse() != null ? entity.getCourse().getId() : null
-        );
+        // Course
+        if (entity.getCourse() != null) {
+            dto.setCourseName(entity.getCourse().getCourseName());
+            dto.setCourseId(entity.getCourse().getId());
+        } else {
+            dto.setCourseName("Not Assigned");
+            dto.setCourseId(null);
+        }
 
-        dto.setCourseStatus(entity.getCourseStatus() != null ? entity.getCourseStatus().name() : "NOT_REQUESTED");
+        dto.setCourseStatus(entity.getCourseStatus() != null
+                ? entity.getCourseStatus().name()
+                : "NOT_REQUESTED");
 
-        dto.setMarksheetImagePath(entity.getMarksheetImagePath());
+        // Files
         dto.setProfileImagePath(entity.getProfileImagePath());
 
         // Subjects
@@ -150,8 +165,22 @@ public class HodServiceImp implements HodService {
             dto.setSubjectId(Collections.emptyList());
         }
 
+        // Extra fields from StudentUpdateRequestDto if available
+        dto.setFirstName(entity.getFirstName());
+        dto.setLastName(entity.getLastName());
+        dto.setFatherName(entity.getFatherName());
+        dto.setMotherName(entity.getMotherName());
+        dto.setGuardianName(entity.getGuardianName());
+        dto.setStreet(entity.getStreet());
+        dto.setCity(entity.getCity());
+        dto.setState(entity.getState());
+        dto.setPincode(entity.getPincode());
+        dto.setCountry(entity.getCountry());
+        dto.setAdmission_date(entity.getAdmission_date());
+
         return dto;
     }
+
 
 
     @Override
@@ -211,7 +240,7 @@ public class HodServiceImp implements HodService {
 
         // Step 4: Check if already rejected
         if (student.getStatus() == StatusEnum.REJECTED) {
-            throw new RuntimeException("Student " + student.getName() + " is already rejected.");
+            throw new RuntimeException("Student " + student.getFirstName() + " is already rejected.");
         }
 
         // Step 5: Reject and save
@@ -219,7 +248,7 @@ public class HodServiceImp implements HodService {
         StudentEntity saved = studentRepo.save(student);
 
         // Step 6: Send email
-        String name = saved.getName();
+        String name = saved.getFirstName();
         String to = saved.getEmail();
         String subject = "Request has been rejected by HOD";
         String body = name + ", your registration request has been rejected by HOD.";
@@ -337,7 +366,7 @@ public class HodServiceImp implements HodService {
             throw new RuntimeException("Access denied: Student does not belong to your department.");
         }
 
-        String name = student.getName();
+        String name = student.getFirstName() + "" + student.getLastName();
             student.setUser(null);
             student.setSubjects(null);
             student.setCourse(null);
@@ -824,104 +853,6 @@ public class HodServiceImp implements HodService {
 
     }
 
-    @Override
-    public StudentResDto updateStudent(Long studentId, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage) {
-
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        String username = auth.getName();
-
-        UsersEntity user = usersRepo.findByUsername(username);
-        UserProfileEntity userProfile = profileRepo.findByUser_Id(user.getId());
-        if (user == null || userProfile == null) {
-            throw new RuntimeException("User profile not found.");
-        }
-
-        // 2. Check HOD role
-        if (!"ROLE_HOD".equals(user.getRole().getName())) {
-            throw new RuntimeException("Only HODs are allowed to update student data.");
-        }
-
-        DepartmentEntity hodDept = userProfile.getDepartment();
-        if (hodDept == null) {
-            throw new RuntimeException("HOD does not belong to any department.");
-        }
-
-        // 3. Find student and check department match
-        StudentEntity student = studentRepo.findById(studentId)
-                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + studentId));
-
-        if (!student.getDepartment().getId().equals(hodDept.getId())) {
-            throw new RuntimeException("You can only update students from your own department.");
-        }
-
-        //  Continue with your existing update logic...
-        if (dto.getName() != null && !dto.getName().isBlank()) {
-            student.setName(dto.getName());
-        }
-        int age = 0;
-        if (dto.getDateOfBirth() != null) {
-            age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
-            student.setAge(age);
-            student.setDateOfBirth(dto.getDateOfBirth());
-        }
-        if (dto.getGender() != null && !dto.getGender().isBlank()) {
-            student.setGender(dto.getGender());
-        }
-        if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
-            student.setEmail(dto.getEmail());
-        }
-        if (dto.getPhoneNumber() != null && !dto.getPhoneNumber().isBlank()) {
-            student.setPhoneNumber(dto.getPhoneNumber());
-        }
-
-        if (dto.getCourseId() != null){
-            CourseEntity core = courseRepo.findById(dto.getCourseId())
-                    .orElseThrow(()->new RuntimeException("Course not found"));
-            student.setCourse(core);
-            student.setCourseStatus(CourseRequestStatusEnum.APPROVED);
-        }
-        if (dto.getSubjectId() != null){
-            List<SubjectEntity> subjects = subRepo.findAllById(dto.getSubjectId());
-            student.setSubjects(subjects);
-        }
-        // Optional: If you allow HODs to move students between departments (usually no)
-        if (dto.getDepartmentId() != null ) {
-            DepartmentEntity newDept = deptRepo.findById(dto.getDepartmentId())
-                    .orElseThrow(()-> new RuntimeException("Department '" + dto.getDepartmentId() + "' not found"));
-
-            if (!newDept.getId().equals(hodDept.getId())) {
-                throw new RuntimeException("You are not allowed to move student to another department.");
-            }
-
-            student.setDepartment(newDept);
-        }
-
-        // File upload logic remains the same
-        try {
-            String uploadDir = "uploads/students/";
-            Files.createDirectories(Paths.get(uploadDir));
-
-            if (profileImage != null && !profileImage.isEmpty()) {
-                String profileImageName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
-                Path profileImagePath = Paths.get(uploadDir, profileImageName);
-                Files.copy(profileImage.getInputStream(), profileImagePath, StandardCopyOption.REPLACE_EXISTING);
-                student.setProfileImagePath("/" + uploadDir + profileImageName);
-            }
-
-            if (marksheetImage != null && !marksheetImage.isEmpty()) {
-                String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage.getOriginalFilename());
-                Path marksheetImagePath = Paths.get(uploadDir, marksheetImageName);
-                Files.copy(marksheetImage.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
-                student.setMarksheetImagePath("/" + uploadDir + marksheetImageName);
-            }
-
-        } catch (IOException e) {
-            throw new RuntimeException("Failed to store updated images", e);
-        }
-
-        StudentEntity updatedStudent = studentRepo.save(student);
-        return mapToDto(updatedStudent);
-    }
 
     @Override
     public Page<StudentResDto> getFilteredRequestedStudents(String name, StatusEnum status, int page, int size) {
@@ -1032,6 +963,134 @@ public class HodServiceImp implements HodService {
         }
 
         return mapToDto(userProfile);
+    }
+
+    @Override
+    public StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage,  MultipartFile marksheetImage10th, MultipartFile marksheetImage12th, MultipartFile ugCertificate) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        String username = auth.getName();
+
+        UsersEntity user = usersRepo.findByUsername(username);
+        UserProfileEntity userProfile = profileRepo.findByUser_Id(user.getId());
+        if (user == null || userProfile == null) {
+            throw new RuntimeException("User profile not found.");
+        }
+
+        if (!"ROLE_HOD".equals(user.getRole().getName())) {
+            throw new RuntimeException("Only HODs are allowed to update student data.");
+        }
+
+        DepartmentEntity hodDept = userProfile.getDepartment();
+        if (hodDept == null) {
+            throw new RuntimeException("HOD does not belong to any department.");
+        }
+
+        StudentEntity student = studentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found with ID: " + id));
+
+        if (!student.getDepartment().getId().equals(hodDept.getId())) {
+            throw new RuntimeException("You can only update students from your own department.");
+        }
+
+        // ---- BASIC DETAILS ----
+        if (dto.getFirstName() != null) student.setFirstName(dto.getFirstName());
+        if (dto.getLastName() != null) student.setLastName(dto.getLastName());
+        if (dto.getProgrammeLevel() != null) student.setProgrammeLevel(dto.getProgrammeLevel());
+        if (dto.getProgrammeOfStudy() != null) student.setProgrammeOfStudy(dto.getProgrammeOfStudy());
+
+        if (dto.getDateOfBirth() != null) {
+            student.setDateOfBirth(dto.getDateOfBirth());
+            student.setAge(Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears());
+        }
+
+        if (dto.getGender() != null) student.setGender(dto.getGender());
+        if (dto.getEmail() != null) student.setEmail(dto.getEmail());
+        if (dto.getPhoneNumber() != null) student.setPhoneNumber(dto.getPhoneNumber());
+
+        // ---- FAMILY DETAILS ----
+        if (dto.getFatherName() != null) student.setFatherName(dto.getFatherName());
+        if (dto.getFatherMobile() != null) student.setFatherMobile(dto.getFatherMobile());
+        if (dto.getFatherOccupation() != null) student.setFatherOccupation(dto.getFatherOccupation());
+        if (dto.getMotherName() != null) student.setMotherName(dto.getMotherName());
+        if (dto.getMotherMobile() != null) student.setMotherMobile(dto.getMotherMobile());
+        if (dto.getMotherOccupation() != null) student.setMotherOccupation(dto.getMotherOccupation());
+        if (dto.getGuardianName() != null) student.setGuardianName(dto.getGuardianName());
+        if (dto.getGuardian_phone() != null) student.setGuardian_phone(dto.getGuardian_phone());
+
+        // ---- ADDRESS ----
+        if (dto.getStreet() != null) student.setStreet(dto.getStreet());
+        if (dto.getCity() != null) student.setCity(dto.getCity());
+        if (dto.getState() != null) student.setState(dto.getState());
+        if (dto.getCountry() != null) student.setCountry(dto.getCountry());
+        if (dto.getPincode() != null) student.setPincode(dto.getPincode());
+        if (dto.getTaluk() != null) student.setTaluk(dto.getTaluk());
+
+        // ---- EDUCATIONAL DETAILS ----
+        if (dto.getSchoolName() != null) student.setSchoolName(dto.getSchoolName());
+        if (dto.getHostelBusService() != null) student.setHostelBusService(dto.getHostelBusService());
+        if (dto.getBoardingPoint() != null) student.setBoardingPoint(dto.getBoardingPoint());
+        if (dto.getAadharNumber() != null) student.setAadharNumber(dto.getAadharNumber());
+
+        // ---- COURSE & SUBJECTS ----
+        if (dto.getCourseId() != null) {
+            CourseEntity course = courseRepo.findById(dto.getCourseId())
+                    .orElseThrow(() -> new RuntimeException("Course not found"));
+            student.setCourse(course);
+            student.setCourseStatus(CourseRequestStatusEnum.APPROVED);
+        }
+        if (dto.getSubjectId() != null) {
+            List<SubjectEntity> subjects = subRepo.findAllById(dto.getSubjectId());
+            student.setSubjects(subjects);
+        }
+
+        // ---- DEPARTMENT ----
+        if (dto.getDepartmentId() != null) {
+            DepartmentEntity newDept = deptRepo.findById(dto.getDepartmentId())
+                    .orElseThrow(() -> new RuntimeException("Department not found"));
+            if (!newDept.getId().equals(hodDept.getId())) {
+                throw new RuntimeException("You are not allowed to move the student to another department.");
+            }
+            student.setDepartment(newDept);
+        }
+
+        // ---- FILE UPLOAD ----
+        try {
+            String uploadDir = "uploads/students/";
+            Files.createDirectories(Paths.get(uploadDir));
+
+            if (profileImage != null && !profileImage.isEmpty()) {
+                String profileImageName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
+                Path profileImagePath = Paths.get(uploadDir, profileImageName);
+                Files.copy(profileImage.getInputStream(), profileImagePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setProfileImagePath("/" + uploadDir + profileImageName);
+            }
+
+            if (marksheetImage10th != null && !marksheetImage10th.isEmpty()) {
+                String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage10th.getOriginalFilename());
+                Path marksheetImagePath = Paths.get(uploadDir, marksheetImageName);
+                Files.copy(marksheetImage10th.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setMarksheetImagePath10th("/" + uploadDir + marksheetImageName);
+            }
+            if (marksheetImage12th != null && !marksheetImage12th.isEmpty()) {
+                String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage12th.getOriginalFilename());
+                Path marksheetImagePath = Paths.get(uploadDir, marksheetImageName);
+                Files.copy(marksheetImage12th.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setMarksheetImagePath12th("/" + uploadDir + marksheetImageName);
+            }
+            if (ugCertificate != null && !ugCertificate.isEmpty()) {
+                String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(ugCertificate.getOriginalFilename());
+                Path marksheetImagePath = Paths.get(uploadDir, marksheetImageName);
+                Files.copy(ugCertificate.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setUgCertificate("/" + uploadDir + marksheetImageName);
+            }
+        } catch (IOException e) {
+            throw new RuntimeException("Failed to store updated images", e);
+        }
+
+        student.setUpdated_at(LocalDate.now());
+
+        StudentEntity updatedStudent = studentRepo.save(student);
+        return mapToDto(updatedStudent);
     }
 
     private String getFileExtension(String filename) {

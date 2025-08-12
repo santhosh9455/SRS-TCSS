@@ -28,15 +28,12 @@ public class StudentController {
     @PostMapping(value = "/registerRequest", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StudentResDto> registerStudent(@ModelAttribute StudentRequestDto form) {
 
-        StudentRequestDto dto = new StudentRequestDto();
-        dto.setName(form.getName());
-        dto.setDepartmentId(form.getDepartmentId());
-        dto.setEmail(form.getEmail());
-        dto.setDateOfBirth(form.getDateOfBirth());
-        dto.setGender(form.getGender());
-        dto.setPhoneNumber(form.getPhoneNumber());
 
-        StudentResDto response = serviceImp.RegisterRequest(dto, form.getProfileImage(), form.getMarksheetImage());
+        StudentResDto response = serviceImp.RegisterRequest(form,
+                form.getProfileImage(),
+                form.getMarksheetImage10th(),
+                form.getMarksheetImage12th(),
+                form.getUgCertificate());
 
         return ResponseEntity.ok(response);
     }

@@ -110,7 +110,7 @@ public class StudentReportServiceImpl implements StudentReportService {
 
         // 9. Define header columns
         String[] headers = {
-                "ID", "Name", "Email", "Department", "Phone",
+                "ID", "First Name","Last Name", "Email", "Department", "Phone",
                 "Age", "Course Status", "Student Status", "Username"
         };
 
@@ -127,7 +127,8 @@ public class StudentReportServiceImpl implements StudentReportService {
         // 11. Fill rows from student list
         for (StudentEntity s : students) {
             table.addCell(new Cell().add(new Paragraph(String.valueOf(s.getId()))));
-            table.addCell(new Cell().add(new Paragraph(s.getName())));
+            table.addCell(new Cell().add(new Paragraph(s.getFirstName())));
+            table.addCell(new Cell().add(new Paragraph(s.getLastName())));
             table.addCell(new Cell().add(new Paragraph(s.getEmail())));
             table.addCell(new Cell().add(new Paragraph(s.getDepartment().getDepartmentName())));
             table.addCell(new Cell().add(new Paragraph(s.getPhoneNumber())));
@@ -159,7 +160,8 @@ public class StudentReportServiceImpl implements StudentReportService {
 
         List<studentReportDto> dtos = students.stream().map(student -> {
             studentReportDto dto = new studentReportDto();
-            dto.setName(student.getName());
+            dto.setFirstName(student.getFirstName());
+            dto.setLastName(student.getLastName());
             dto.setEmail(student.getEmail());
             dto.setDepartmentName(student.getDepartment().getDepartmentName());
             dto.setAge(student.getAge());
@@ -184,32 +186,34 @@ public class StudentReportServiceImpl implements StudentReportService {
 
         // Header Row
         Row header = sheet.createRow(0);
-        header.createCell(0).setCellValue("Name");
-        header.createCell(1).setCellValue("Email");
-        header.createCell(2).setCellValue("Department");
-        header.createCell(3).setCellValue("Phone");
-        header.createCell(4).setCellValue("Age");
-        header.createCell(5).setCellValue("Gender");
-        header.createCell(6).setCellValue("Username");
-        header.createCell(7).setCellValue("Course Name");
-        header.createCell(8).setCellValue("Subject Names");
-        header.createCell(9).setCellValue("Student Status");
-        header.createCell(10).setCellValue("Course Status");
+        header.createCell(0).setCellValue("First Name");
+        header.createCell(1).setCellValue("Last Name");
+        header.createCell(2).setCellValue("Email");
+        header.createCell(3).setCellValue("Department");
+        header.createCell(4).setCellValue("Phone");
+        header.createCell(5).setCellValue("Age");
+        header.createCell(6).setCellValue("Gender");
+        header.createCell(7).setCellValue("Username");
+        header.createCell(8).setCellValue("Course Name");
+        header.createCell(9).setCellValue("Subject Names");
+        header.createCell(10).setCellValue("Student Status");
+        header.createCell(11).setCellValue("Course Status");
 
         int rowIndex = 1;
         for (studentReportDto dto : dtos) {
             Row row = sheet.createRow(rowIndex++);
-            row.createCell(0).setCellValue(dto.getName());
-            row.createCell(1).setCellValue(dto.getEmail());
-            row.createCell(2).setCellValue(dto.getDepartmentName());
-            row.createCell(3).setCellValue(dto.getPhoneNumber());
-            row.createCell(4).setCellValue(dto.getAge() != null ? dto.getAge() : 0);
-            row.createCell(5).setCellValue(dto.getGender() != null ? dto.getGender() : "N/A");
-            row.createCell(6).setCellValue(dto.getUsername());
-            row.createCell(7).setCellValue(dto.getCourseName());
-            row.createCell(8).setCellValue(dto.getSubjectNames());
-            row.createCell(9).setCellValue(dto.getStatus());
-            row.createCell(10).setCellValue(dto.getCourseStatus());
+            row.createCell(0).setCellValue(dto.getFirstName());
+            row.createCell(1).setCellValue(dto.getLastName());
+            row.createCell(2).setCellValue(dto.getEmail());
+            row.createCell(3).setCellValue(dto.getDepartmentName());
+            row.createCell(4).setCellValue(dto.getPhoneNumber());
+            row.createCell(5).setCellValue(dto.getAge() != null ? dto.getAge() : 0);
+            row.createCell(6).setCellValue(dto.getGender() != null ? dto.getGender() : "N/A");
+            row.createCell(7).setCellValue(dto.getUsername());
+            row.createCell(8).setCellValue(dto.getCourseName());
+            row.createCell(9).setCellValue(dto.getSubjectNames());
+            row.createCell(10).setCellValue(dto.getStatus());
+            row.createCell(11).setCellValue(dto.getCourseStatus());
         }
 
         // Auto-size columns for better appearance
@@ -238,7 +242,8 @@ public class StudentReportServiceImpl implements StudentReportService {
 
         List<studentReportDto> dtos = students.stream().map(student -> {
             studentReportDto dto = new studentReportDto();
-            dto.setName(student.getName());
+            dto.setFirstName(student.getFirstName());
+            dto.setLastName(student.getLastName());
             dto.setEmail(student.getEmail());
             dto.setDepartmentName(student.getDepartment().getDepartmentName());
             dto.setAge(student.getAge());

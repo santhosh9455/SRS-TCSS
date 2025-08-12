@@ -26,7 +26,6 @@ public interface AdminService {
 
     void assignSubjectToStudents(Long departmentId, Long subjectId);
 
-    StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage);
 
     List<StudentResDto> getAllStudent();
 
@@ -59,4 +58,6 @@ public interface AdminService {
     StudentResDto RegisterRequest(StudentRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage);
 
     Page<SubjectResDto> getFilterAllSubjects(String search,Pageable pageable);
+
+    StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage, MultipartFile marksheetImage12th, MultipartFile marksheetImage10th, MultipartFile ugCertificateFile);
 }

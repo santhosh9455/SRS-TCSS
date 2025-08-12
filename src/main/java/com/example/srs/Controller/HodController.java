@@ -86,30 +86,25 @@ public class HodController {
     @PatchMapping(value = "/UpdateStudents/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StudentResDto> updateStudent(
             @PathVariable Long id,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false)LocalDate dateOfBirth,
-            @RequestParam(required = false) String gender,
-            @RequestParam(required = false) String email,
-            @RequestParam(required = false) String phoneNumber,
-            @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) List<Long> subjectId,
-            @RequestParam(required = false) Long courseId,
-            @RequestParam(required = false) MultipartFile profileImage,
-            @RequestParam(required = false) MultipartFile marksheetImage) {
+            @RequestPart("student") StudentUpdateRequestDto dto, // JSON part
+            @RequestPart(required = false) MultipartFile profileImage,
+            @RequestPart(required = false) MultipartFile marksheetImage,
+            @RequestPart(required = false) MultipartFile marksheetImage10th,
+            @RequestPart(required = false) MultipartFile marksheetImage12th,
+            @RequestPart(required = false) MultipartFile ugCertificate) {
 
-        StudentUpdateRequestDto dto = new StudentUpdateRequestDto();
-        dto.setName(name);
-        dto.setDateOfBirth(dateOfBirth);
-        dto.setGender(gender);
-        dto.setEmail(email);
-        dto.setPhoneNumber(phoneNumber);
-        dto.setDepartmentId(departmentId);
-        dto.setSubjectId(subjectId);
-        dto.setCourseId(courseId);
+        StudentResDto response = serviceImp.updateStudent(
+                id,
+                dto,
+                profileImage,
+                marksheetImage10th,
+                marksheetImage12th,
+                ugCertificate
+        );
 
-        StudentResDto response = serviceImp.updateStudent(id, dto, profileImage, marksheetImage);
         return ResponseEntity.ok(response);
     }
+
 
 
     @PostMapping("/createStaff")

@@ -19,34 +19,91 @@ import java.util.List;
 @ToString
 public class StudentRequestDto {
 
-    @NotBlank(message = "Name is Required")
-    private String name;
+    // Basic Details
+    @NotBlank(message = "First Name is Required")
+    private String firstName;
 
+    @NotBlank(message = "Last Name is Required")
+    private String lastName;
 
+    @NotNull(message = "Age is Required")
+    @Min(value = 1, message = "Age must be greater than 0")
     private Integer age;
 
-    @NotBlank(message = "gender is Required")
+    @NotNull(message = "Date of Birth is Required")
+    private LocalDate dateOfBirth;
+
+    @NotBlank(message = "Gender is Required")
     private String gender;
 
-    @Email(message = "Invalid Email id")
-    @NotBlank(message = "email is Required")
+    @Email(message = "Invalid Email Address")
+    @NotBlank(message = "Email is Required")
     private String email;
 
-    @NotBlank(message = "phoneNumber is Required")
+    @NotBlank(message = "Phone Number is Required")
     private String phoneNumber;
 
-    @NotBlank(message = "Department Name is Required")
+    @NotNull(message = "Department ID is Required")
     private Long departmentId;
 
-    @NotNull(message = "Date Of Birth is Required")
-    private LocalDate dateOfBirth;
+    // Academic Details
+    @NotBlank(message = "Programme Level is Required")
+    private String programmeLevel;
+
+    @NotBlank(message = "Programme of Study is Required")
+    private String programmeOfStudy;
 
     private Long courseId;
     private List<Long> subjectId;
 
-    private MultipartFile profileImage;
-    private MultipartFile marksheetImage;
+    // Parent / Guardian Details
+    @NotBlank(message = "Aadhar Number is Required")
+    private String aadharNumber;
 
-    public StudentRequestDto(@NotBlank(message = "Name is Required") String name, @NotNull(message = "age is Required") @Min(value = 18) Integer age, @NotBlank(message = "gender is Required") String gender, @Email(message = "Invalid Email id") @NotBlank(message = "email is Required") String email, @NotBlank(message = "phoneNumber is Required") String phoneNumber, @NotBlank(message = "Department Name is Required") String departmentName) {
-    }
+    private String fatherName;
+
+    private String fatherMobile;
+    private String fatherOccupation;
+
+    private String motherName;
+    private String motherMobile;
+    private String motherOccupation;
+
+    private String guardianName;
+    private String guardianPhone;
+
+    // Address Details
+    private String street;
+    private String taluk;
+
+    @NotBlank(message = "City is Required")
+    private String city;
+
+    @NotBlank(message = "State is Required")
+    private String state;
+
+    @NotBlank(message = "Pincode is Required")
+    private String pincode;
+
+    @NotBlank(message = "Country is Required")
+    private String country;
+
+    // School / Hostel Info
+    private String schoolName;
+    private String hostelBusService;
+    private String boardingPoint;
+
+    // Admission Details
+    private LocalDate admissionDate;
+    private String enrollmentStatus;
+
+    // File Uploads
+    private MultipartFile profileImage;          // profileImagePath
+    private MultipartFile marksheetImage12th;    // marksheetImagePath12th
+    private MultipartFile marksheetImage10th;    // marksheetImagePath10th
+    private MultipartFile ugCertificate;         // ugCertificate
+
+    // Audit Fields
+    private LocalDate createdAt;
+    private LocalDate updatedAt;
 }

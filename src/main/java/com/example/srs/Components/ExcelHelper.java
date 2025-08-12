@@ -36,7 +36,7 @@ public class ExcelHelper {
                 StudentEntity student = new StudentEntity();
                 DataFormatter formatter = new DataFormatter();
 
-                student.setName(formatter.formatCellValue(currentRow.getCell(0)));
+                student.setFirstName(formatter.formatCellValue(currentRow.getCell(0)));
 
                 String ageStr = formatter.formatCellValue(currentRow.getCell(1));
                 student.setAge(ageStr.isEmpty() ? 0 : Integer.parseInt(ageStr));
@@ -46,7 +46,7 @@ public class ExcelHelper {
                 student.setPhoneNumber(formatter.formatCellValue(currentRow.getCell(4)));
 
                 student.setProfileImagePath(null);
-                student.setMarksheetImagePath(null);
+                student.setMarksheetImagePath10th(null);
                 student.setDepartment(department);
 
                 students.add(student);

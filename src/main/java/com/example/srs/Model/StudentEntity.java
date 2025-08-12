@@ -27,7 +27,6 @@ public class StudentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String name;
     private Integer age;
     private LocalDate dateOfBirth;
     private String gender;
@@ -39,7 +38,63 @@ public class StudentEntity {
 
     private String profileImagePath;
 
-    private String  marksheetImagePath;
+    private String firstName;
+
+    private String lastName;
+
+    private String programmeLevel;
+
+    private String programmeOfStudy;
+
+    private String aadharNumber;
+
+    private String fatherName;
+
+    private String fatherMobile;
+
+    private String fatherOccupation;
+
+    private String motherName;
+
+    private String motherMobile;
+
+    private String motherOccupation;
+
+    private String street;
+
+    private String taluk;
+
+    private String schoolName;
+
+    private String hostelBusService;
+
+    private String boardingPoint;
+
+    private String marksheetImagePath12th;
+
+    private String city;
+
+    private String state;
+
+    private String pincode;
+
+    private String country;
+
+    private LocalDate admission_date;
+
+    private String guardianName;
+
+    private String guardian_phone;
+
+    private LocalDate created_at;
+
+    private LocalDate updated_at;
+
+    private String enrollment_status;
+
+    private String  marksheetImagePath10th;
+
+    private String ugCertificate;
 
     @Enumerated(EnumType.STRING)
     private StatusEnum status = StatusEnum.PENDING;

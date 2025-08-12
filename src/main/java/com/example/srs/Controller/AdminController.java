@@ -79,40 +79,130 @@ public class AdminController {
         return ResponseEntity.ok("Subject assigned to all students in " + departmentId);
     }
 
-    @PatchMapping(value = "/UpdateStudents/{id}",consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
+    @PatchMapping(value = "/UpdateStudents/{id}", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<StudentResDto> updateStudent(
             @PathVariable Long id,
-            @RequestParam(required = false) String name,
-            @RequestParam(required = false) LocalDate dateOfBirth,
+
+            // Basic details
+            @RequestParam(required = false) Integer age,
+            @RequestParam(required = false) String firstName,
+            @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String gender,
+            @RequestParam(required = false) LocalDate dateOfBirth,
             @RequestParam(required = false) String email,
             @RequestParam(required = false) String phoneNumber,
-            @RequestParam(required = false) Long courseId,
-            @RequestParam(required = false) List<Long> subjectId,
+            @RequestParam(required = false) String username,
             @RequestParam(required = false) String status,
             @RequestParam(required = false) String courseStatus,
             @RequestParam(required = false) Long departmentId,
-            @RequestParam(required = false) String username,
-            @RequestParam(required = false) MultipartFile profileImage,
-            @RequestParam(required = false) MultipartFile marksheetImage) {
+            @RequestParam(required = false) Long courseId,
+            @RequestParam(required = false) List<Long> subjectId,
 
-        System.out.println("Status code  ..... "+status);
+            // Academic details
+            @RequestParam(required = false) String programmeLevel,
+            @RequestParam(required = false) String programmeOfStudy,
+            @RequestParam(required = false) String schoolName,
+            @RequestParam(required = false) String ugCertificate,
+
+            // Address details
+            @RequestParam(required = false) String street,
+            @RequestParam(required = false) String taluk,
+            @RequestParam(required = false) String city,
+            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String pincode,
+            @RequestParam(required = false) String country,
+
+            // Parent / guardian details
+            @RequestParam(required = false) String fatherName,
+            @RequestParam(required = false) String fatherMobile,
+            @RequestParam(required = false) String fatherOccupation,
+            @RequestParam(required = false) String motherName,
+            @RequestParam(required = false) String motherMobile,
+            @RequestParam(required = false) String motherOccupation,
+            @RequestParam(required = false) String guardianName,
+            @RequestParam(required = false) String guardian_phone,
+
+            // Other details
+            @RequestParam(required = false) String hostelBusService,
+            @RequestParam(required = false) String boardingPoint,
+            @RequestParam(required = false) String aadharNumber,
+            @RequestParam(required = false) LocalDate admission_date,
+            @RequestParam(required = false) LocalDate created_at,
+            @RequestParam(required = false) LocalDate updated_at,
+            @RequestParam(required = false) String enrollment_status,
+
+            // Multipart files
+            @RequestParam(required = false) MultipartFile profileImage,
+            @RequestParam(required = false) MultipartFile marksheetImage,
+            @RequestParam(required = false) MultipartFile marksheetImage12th,
+            @RequestParam(required = false) MultipartFile marksheetImage10th,
+            @RequestParam(required = false) MultipartFile ugCertificateFile
+    ) {
+
         StudentUpdateRequestDto dto = new StudentUpdateRequestDto();
-        dto.setName(name);
-        dto.setDateOfBirth(dateOfBirth);
+
+        // Basic details
+        dto.setAge(age);
+        dto.setFirstName(firstName);
+        dto.setLastName(lastName);
         dto.setGender(gender);
+        dto.setDateOfBirth(dateOfBirth);
         dto.setEmail(email);
         dto.setPhoneNumber(phoneNumber);
-        dto.setDepartmentId(departmentId);
         dto.setUsername(username);
         dto.setStatus(status);
-        dto.setCourseId(courseId);
         dto.setCourseStatus(courseStatus);
+        dto.setDepartmentId(departmentId);
+        dto.setCourseId(courseId);
         dto.setSubjectId(subjectId);
 
-        StudentResDto response = adminservice.updateStudent(id, dto, profileImage, marksheetImage);
+        // Academic details
+        dto.setProgrammeLevel(programmeLevel);
+        dto.setProgrammeOfStudy(programmeOfStudy);
+        dto.setSchoolName(schoolName);
+        dto.setUgCertificate(ugCertificate);
+
+        // Address details
+        dto.setStreet(street);
+        dto.setTaluk(taluk);
+        dto.setCity(city);
+        dto.setState(state);
+        dto.setPincode(pincode);
+        dto.setCountry(country);
+
+        // Parent / guardian
+        dto.setFatherName(fatherName);
+        dto.setFatherMobile(fatherMobile);
+        dto.setFatherOccupation(fatherOccupation);
+        dto.setMotherName(motherName);
+        dto.setMotherMobile(motherMobile);
+        dto.setMotherOccupation(motherOccupation);
+        dto.setGuardianName(guardianName);
+        dto.setGuardian_phone(guardian_phone);
+
+        // Other details
+        dto.setHostelBusService(hostelBusService);
+        dto.setBoardingPoint(boardingPoint);
+        dto.setAadharNumber(aadharNumber);
+        dto.setAdmission_date(admission_date);
+        dto.setCreated_at(created_at);
+        dto.setUpdated_at(updated_at);
+        dto.setEnrollment_status(enrollment_status);
+
+        // Pass files directly; file path setting happens in service layer
+        StudentResDto response = adminservice.updateStudent(
+                id,
+                dto,
+                profileImage,
+                marksheetImage,
+                marksheetImage12th,
+                marksheetImage10th,
+                ugCertificateFile
+        );
+
         return ResponseEntity.ok(response);
     }
+
 
     @GetMapping("/getAllCourses")
     public ResponseEntity<List<CourseResDto>> getAllCourse() {
@@ -212,7 +302,6 @@ public class AdminController {
     public ResponseEntity<StudentResDto> registerStudent(@ModelAttribute StudentRequestDto form) {
 
         StudentRequestDto dto = new StudentRequestDto();
-        dto.setName(form.getName());
         dto.setDepartmentId(form.getDepartmentId());
         dto.setEmail(form.getEmail());
         dto.setAge(form.getAge());
@@ -221,7 +310,7 @@ public class AdminController {
         dto.setCourseId(form.getCourseId());
         dto.setSubjectId(form.getSubjectId());
 
-        StudentResDto response = adminservice.RegisterRequest(dto, form.getProfileImage(), form.getMarksheetImage());
+        StudentResDto response = adminservice.RegisterRequest(dto, form.getProfileImage(), form.getMarksheetImage10th());
 
         return ResponseEntity.ok(response);
     }

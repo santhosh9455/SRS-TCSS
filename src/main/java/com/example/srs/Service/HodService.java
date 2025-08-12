@@ -48,7 +48,6 @@ public interface HodService {
 
     Map<String, String> deleteCourse(Long id);
 
-    StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage);
 
     Page<StudentResDto> getFilteredRequestedStudents(String name, StatusEnum status, int page, int size);
 
@@ -59,4 +58,6 @@ public interface HodService {
     Page<SubjectResDto> getFilterAllSubjects(String search, Pageable pageable);
 
     StaffResDto profile();
+
+    StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage10th, MultipartFile marksheetImage12th, MultipartFile ugCertificate);
 }
