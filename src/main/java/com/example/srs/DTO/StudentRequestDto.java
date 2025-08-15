@@ -11,6 +11,8 @@ import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -26,8 +28,7 @@ public class StudentRequestDto {
     @NotBlank(message = "Last Name is Required")
     private String lastName;
 
-    @NotNull(message = "Age is Required")
-    @Min(value = 1, message = "Age must be greater than 0")
+
     private Integer age;
 
     @NotNull(message = "Date of Birth is Required")
@@ -48,10 +49,9 @@ public class StudentRequestDto {
 
     // Academic Details
     @NotBlank(message = "Programme Level is Required")
-    private String programmeLevel;
+    private String programmeLevel;///////----
 
-    @NotBlank(message = "Programme of Study is Required")
-    private String programmeOfStudy;
+
 
     private Long courseId;
     private List<Long> subjectId;
@@ -79,31 +79,33 @@ public class StudentRequestDto {
     @NotBlank(message = "City is Required")
     private String city;
 
-    @NotBlank(message = "State is Required")
-    private String state;
-
     @NotBlank(message = "Pincode is Required")
     private String pincode;
 
-    @NotBlank(message = "Country is Required")
-    private String country;
+    @NotBlank(message = "district is Required")
+    private String district;
 
     // School / Hostel Info
+    @NotBlank(message = "school Name is Required")
     private String schoolName;
     private String hostelBusService;
     private String boardingPoint;
 
     // Admission Details
-    private LocalDate admissionDate;
+    private OffsetDateTime admissionDate;
     private String enrollmentStatus;
 
     // File Uploads
+    @NotNull(message = "profile Image is Required")
     private MultipartFile profileImage;          // profileImagePath
+    @NotNull(message = "marksheet Image 12th is Required")
     private MultipartFile marksheetImage12th;    // marksheetImagePath12th
+    @NotNull(message = "marksheet Image 10th is Required")
     private MultipartFile marksheetImage10th;    // marksheetImagePath10th
+
     private MultipartFile ugCertificate;         // ugCertificate
 
     // Audit Fields
-    private LocalDate createdAt;
-    private LocalDate updatedAt;
+    private OffsetDateTime  createdAt;
+    private OffsetDateTime   updatedAt;
 }

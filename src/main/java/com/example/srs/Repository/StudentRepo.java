@@ -15,17 +15,12 @@ import java.util.Set;
 
 @Repository
 public interface StudentRepo extends JpaRepository<StudentEntity, Long> {
-    List<StudentEntity> findAllByStatus(StatusEnum approved);
 
     boolean existsByUser(UsersEntity user);
 
     StudentEntity findByUser(UsersEntity user);
 
     List<StudentEntity> findByCourse(CourseEntity course);
-
-    Page<StudentEntity> findByCourse_Id(Long courseId, Pageable pageable);
-
-    List<StudentEntity> findByCourseAndStatus(CourseEntity course, CourseRequestStatusEnum statusEnum);
 
     List<StudentEntity> findByCourseAndCourseStatus(CourseEntity course, CourseRequestStatusEnum statusEnum);
 
@@ -43,8 +38,10 @@ public interface StudentRepo extends JpaRepository<StudentEntity, Long> {
   LEFT JOIN s.department d
   LEFT JOIN s.user u
   WHERE 
-    (:search IS NULL OR LOWER(s.name) LIKE CONCAT('%', LOWER(:search), '%') 
-                     OR (u.username IS NOT NULL AND LOWER(u.username) LIKE CONCAT('%', LOWER(:search), '%')))
+    (:search IS NULL 
+      OR LOWER(CONCAT(s.firstName, ' ', s.lastName)) LIKE LOWER(CONCAT('%', :search, '%')) 
+      OR (u.username IS NOT NULL AND LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+    )
     AND (:departmentId IS NULL OR d.id = :departmentId)
     AND (:status IS NULL OR s.status = :status)
 """)
@@ -57,10 +54,13 @@ public interface StudentRepo extends JpaRepository<StudentEntity, Long> {
 
 
 
-    @Query("SELECT s FROM StudentEntity s WHERE " +
-            "(:departmentId IS NULL OR s.department.id = :departmentId) AND " +
-            "(:name IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%'))) AND " +
-            "(:status IS NULL OR s.status = :status)")
+
+    @Query("""
+    SELECT s FROM StudentEntity s
+    WHERE (:departmentId IS NULL OR s.department.id = :departmentId)
+      AND (:name IS NULL OR LOWER(CONCAT(s.firstName, ' ', s.lastName)) LIKE LOWER(CONCAT('%', :name, '%')))
+      AND (:status IS NULL OR s.status = :status)
+""")
     Page<StudentEntity> findFilteredByDepartmentAndStatusAndName(
             @Param("departmentId") Long departmentId,
             @Param("name") String name,
@@ -68,26 +68,28 @@ public interface StudentRepo extends JpaRepository<StudentEntity, Long> {
             Pageable pageable
     );
 
+
+
     boolean existsByEmail(String email);
 
-    Page<StudentEntity> findByCourseAndNameContainingIgnoreCase(CourseEntity course, String trim, Pageable pageable);
 
-    Page<StudentEntity> findByCourse_IdAndNameContainingIgnoreCase(Long id, String trim, Pageable pageable);
-
-    @Query("SELECT s FROM StudentEntity s WHERE s.course.id = :courseId " +
-            "AND (:name IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%'))) " +
-            "AND (:status IS NULL OR s.courseStatus = :status)")
+    @Query("""
+    SELECT s FROM StudentEntity s
+    WHERE s.course.id = :courseId
+      AND (:name IS NULL OR LOWER(CONCAT(s.firstName, ' ', s.lastName)) LIKE LOWER(CONCAT('%', :name, '%')))
+      AND (:status IS NULL OR s.courseStatus = :status)
+""")
     Page<StudentEntity> findByCourseAndFilters(
             @Param("courseId") Long courseId,
             @Param("name") String name,
             @Param("status") CourseRequestStatusEnum status,
-            Pageable pageable);
-
+            Pageable pageable
+    );
 
     @Query("""
     SELECT DISTINCT s FROM StudentEntity s
     JOIN s.subjects subj
-    WHERE (:name IS NULL OR LOWER(s.name) LIKE LOWER(CONCAT('%', :name, '%')))
+    WHERE (:name IS NULL OR LOWER(CONCAT(s.firstName, ' ', s.lastName)) LIKE LOWER(CONCAT('%', :name, '%')))
     AND (:subjectIds IS NULL OR subj.id IN :subjectIds)
 """)
     Page<StudentEntity> findBySubjectsWithNameFilter(

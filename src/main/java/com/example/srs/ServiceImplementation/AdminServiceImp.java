@@ -20,6 +20,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -671,6 +673,7 @@ public class AdminServiceImp implements AdminService {
         StudentEntity student = studentRepo.findById(id)
                 .orElseThrow(() -> new RuntimeException("Student not found with ID: " + id));
 
+
         // ===== Basic Details =====
         if (dto.getFirstName() != null && !dto.getFirstName().isBlank())
             student.setFirstName(dto.getFirstName());
@@ -700,7 +703,6 @@ public class AdminServiceImp implements AdminService {
 
         // ===== Academic Details =====
         if (dto.getProgrammeLevel() != null) student.setProgrammeLevel(dto.getProgrammeLevel());
-        if (dto.getProgrammeOfStudy() != null) student.setProgrammeOfStudy(dto.getProgrammeOfStudy());
 
         if (dto.getDepartmentId() != null) {
             DepartmentEntity dept = deptRepo.findById(dto.getDepartmentId())
@@ -739,7 +741,7 @@ public class AdminServiceImp implements AdminService {
             UsersEntity user = usersRepo.findByUsername(dto.getUsername());
             if (user != null) {
                 boolean existUser = studentRepo.existsByUser(user);
-                if (existUser && !student.getUser().equals(user)) {
+                if (existUser && (student.getUser() == null || !student.getUser().equals(user))) {
                     throw new RuntimeException("Username already assigned to another student");
                 }
                 student.setUser(user);
@@ -764,9 +766,8 @@ public class AdminServiceImp implements AdminService {
         if (dto.getStreet() != null) student.setStreet(dto.getStreet());
         if (dto.getTaluk() != null) student.setTaluk(dto.getTaluk());
         if (dto.getCity() != null) student.setCity(dto.getCity());
-        if (dto.getState() != null) student.setState(dto.getState());
-        if (dto.getCountry() != null) student.setCountry(dto.getCountry());
         if (dto.getPincode() != null) student.setPincode(dto.getPincode());
+        if (dto.getDistrict() != null) student.setDistrict(dto.getDistrict());
 
         // ===== Other Details =====
         if (dto.getAadharNumber() != null) student.setAadharNumber(dto.getAadharNumber());
@@ -787,24 +788,39 @@ public class AdminServiceImp implements AdminService {
             Files.createDirectories(Paths.get(uploadDir));
 
             if (profileImage != null && !profileImage.isEmpty()) {
-                String profileImageName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
-                Path profileImagePath = Paths.get(uploadDir + profileImageName);
-                Files.copy(profileImage.getInputStream(), profileImagePath, StandardCopyOption.REPLACE_EXISTING);
-                student.setProfileImagePath("/" + uploadDir + profileImageName);
+                String fileName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
+                Path filePath = Paths.get(uploadDir + fileName);
+                Files.copy(profileImage.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setProfileImagePath("/" + uploadDir + fileName);
             }
 
-            if (marksheetImage != null && !marksheetImage.isEmpty()) {
-                String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage.getOriginalFilename());
-                Path marksheetImagePath = Paths.get(uploadDir + marksheetImageName);
-                Files.copy(marksheetImage.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
-                student.setMarksheetImagePath10th("/" + uploadDir + marksheetImageName);
+            if (marksheetImage10th != null && !marksheetImage10th.isEmpty()) {
+                String fileName = "marksheet10th_" + UUID.randomUUID() + getFileExtension(marksheetImage10th.getOriginalFilename());
+                Path filePath = Paths.get(uploadDir + fileName);
+                Files.copy(marksheetImage10th.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setMarksheetImagePath10th("/" + uploadDir + fileName);
+            }
+
+            if (marksheetImage12th != null && !marksheetImage12th.isEmpty()) {
+                String fileName = "marksheet12th_" + UUID.randomUUID() + getFileExtension(marksheetImage12th.getOriginalFilename());
+                Path filePath = Paths.get(uploadDir + fileName);
+                Files.copy(marksheetImage12th.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setMarksheetImagePath12th("/" + uploadDir + fileName);
+            }
+
+            if (ugCertificateFile != null && !ugCertificateFile.isEmpty()) {
+                String fileName = "ugCertificate_" + UUID.randomUUID() + getFileExtension(ugCertificateFile.getOriginalFilename());
+                Path filePath = Paths.get(uploadDir + fileName);
+                Files.copy(ugCertificateFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setUgCertificate("/" + uploadDir + fileName);
             }
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to upload files", e);
         }
 
-        student.setUpdated_at(LocalDate.now());
+        // ===== Update Timestamp =====
+        student.setUpdated_at(OffsetDateTime.now());
 
         StudentEntity updated = studentRepo.save(student);
         return mapToDto(updated);
@@ -972,76 +988,44 @@ public class AdminServiceImp implements AdminService {
         return filename.substring(filename.lastIndexOf("."));
     }
 
-    public StudentResDto mapToDto(StudentEntity entity) {
+    public StudentResDto mapToDto(StudentEntity student) {
         StudentResDto dto = new StudentResDto();
 
-        if (entity == null) return dto;
+        if (student == null) return dto;
 
-        dto.setId(entity.getId());
+        // Basic Info
+        dto.setId(student.getId() != null ? student.getId() : 0L);
+        dto.setFirstName(Optional.ofNullable(student.getFirstName()).orElse("Unknown"));
+        dto.setLastName(Optional.ofNullable(student.getLastName()).orElse("Unknown"));
+        dto.setAge(Optional.ofNullable(student.getAge()).orElse(0));
+        dto.setGender(Optional.ofNullable(student.getGender()).orElse("Not Specified"));
+        dto.setEmail(Optional.ofNullable(student.getEmail()).orElse("no-email@example.com"));
+        dto.setPhoneNumber(Optional.ofNullable(student.getPhoneNumber()).orElse("0000000000"));
 
-        // Personal Info
-        dto.setFirstName(entity.getFirstName());
-        dto.setLastName(entity.getLastName());
-        dto.setAge(entity.getAge());
-        dto.setDateOfBirth(entity.getDateOfBirth());
-        dto.setGender(entity.getGender());
-        dto.setEmail(entity.getEmail());
-        dto.setPhoneNumber(entity.getPhoneNumber());
-        dto.setAadharNumber(entity.getAadharNumber());
+        // Department
+        dto.setDepartmentId(student.getDepartment() != null ? student.getDepartment().getId() : null);
+        dto.setDepartmentName(student.getDepartment() != null
+                ? student.getDepartment().getDepartmentName()
+                : "Not Assigned");
 
-        // Academic Info
-        dto.setProgrammeLevel(entity.getProgrammeLevel());
-        dto.setProgrammeOfStudy(entity.getProgrammeOfStudy());
-        dto.setAdmission_date(entity.getAdmission_date());
-        dto.setEnrollment_status(entity.getEnrollment_status());
-
-        // Parents Info
-        dto.setFatherName(entity.getFatherName());
-        dto.setFatherMobile(entity.getFatherMobile());
-        dto.setFatherOccupation(entity.getFatherOccupation());
-        dto.setMotherName(entity.getMotherName());
-        dto.setMotherMobile(entity.getMotherMobile());
-        dto.setMotherOccupation(entity.getMotherOccupation());
-        dto.setGuardianName(entity.getGuardianName());
-        dto.setGuardian_phone(entity.getGuardian_phone());
-
-        // Address Info
-        dto.setStreet(entity.getStreet());
-        dto.setTaluk(entity.getTaluk());
-        dto.setCity(entity.getCity());
-        dto.setState(entity.getState());
-        dto.setPincode(entity.getPincode());
-        dto.setCountry(entity.getCountry());
-        dto.setBoardingPoint(entity.getBoardingPoint());
-        dto.setHostelBusService(entity.getHostelBusService());
-
-        // School Info
-        dto.setSchoolName(entity.getSchoolName());
-
-        // Images / Documents
-        dto.setProfileImagePath(entity.getProfileImagePath());
-        dto.setMarksheetImagePath10th(entity.getMarksheetImagePath10th());
-        dto.setMarksheetImagePath12th(entity.getMarksheetImagePath12th());
-        dto.setUgCertificate(entity.getUgCertificate());
+        // Programme Level
+        dto.setProgrammeLevel(Optional.ofNullable(student.getProgrammeLevel()).orElse("Not Specified"));
 
         // Course
-        if (entity.getCourse() != null) {
-            dto.setCourseName(entity.getCourse().getCourseName());
-            dto.setCourseId(entity.getCourse().getId());
-        } else {
-            dto.setCourseName("Not Assigned");
-            dto.setCourseId(null);
-        }
+        dto.setCourseId(student.getCourse() != null ? student.getCourse().getId() : null);
+        dto.setCourseName(student.getCourseStatus() != null
+                ? student.getCourseStatus().name()
+                : "NOT_REQUESTED");
 
-        // Subjects
-        if (entity.getSubjects() != null && !entity.getSubjects().isEmpty()) {
-            List<String> subjectNames = entity.getSubjects().stream()
+        // Subject
+        if (student.getSubjects() != null && !student.getSubjects().isEmpty()) {
+            List<String> subjectNames = student.getSubjects().stream()
                     .map(SubjectEntity::getSubjectName)
                     .filter(Objects::nonNull)
                     .toList();
             dto.setSubjectName(subjectNames);
 
-            List<Long> subjectIds = entity.getSubjects().stream()
+            List<Long> subjectIds = student.getSubjects().stream()
                     .map(SubjectEntity::getId)
                     .filter(Objects::nonNull)
                     .toList();
@@ -1050,26 +1034,52 @@ public class AdminServiceImp implements AdminService {
             dto.setSubjectName(Collections.singletonList("Not Assigned"));
             dto.setSubjectId(Collections.emptyList());
         }
+        // Status
+        dto.setStatus(Optional.ofNullable(student.getStatus()).map(Enum::toString).orElse("PENDING"));
+        dto.setEnrollment_status(Optional.ofNullable(student.getEnrollment_status()).orElse("PENDING"));
 
-        // Department
-        if (entity.getDepartment() != null) {
-            dto.setDepartmentName(entity.getDepartment().getDepartmentName());
-            dto.setDepartmentId(entity.getDepartment().getId());
-        } else {
-            dto.setDepartmentName("Not Assigned");
-            dto.setDepartmentId(null);
-        }
+        // Address
+        dto.setStreet(Optional.ofNullable(student.getStreet()).orElse("N/A"));
+        dto.setTaluk(Optional.ofNullable(student.getTaluk()).orElse("N/A"));
+        dto.setCity(Optional.ofNullable(student.getCity()).orElse("N/A"));
+        dto.setPincode(Optional.ofNullable(student.getPincode()).orElse("000000"));
+        dto.setDistrict(Optional.ofNullable(student.getDistrict()).orElse("N/A"));
+        // Guardian
+        dto.setGuardianName(Optional.ofNullable(student.getGuardianName()).orElse("N/A"));
+        dto.setGuardian_phone(Optional.ofNullable(student.getGuardian_phone()).orElse("0000000000"));
 
-        // Enums
-        dto.setStatus(entity.getStatus() != null ? entity.getStatus().name() : "PENDING");
-        dto.setCourseStatus(entity.getCourseStatus() != null ? entity.getCourseStatus().name() : "NOT_REQUESTED");
+        // Parent Info
+        dto.setFatherName(Optional.ofNullable(student.getFatherName()).orElse("N/A"));
+        dto.setFatherMobile(Optional.ofNullable(student.getFatherMobile()).orElse("0000000000"));
+        dto.setFatherOccupation(Optional.ofNullable(student.getFatherOccupation()).orElse("N/A"));
 
-        // User
-        if (entity.getUser() != null && entity.getUser().getUsername() != null) {
-            dto.setUsername(entity.getUser().getUsername());
-        } else {
-            dto.setUsername("N/A");
-        }
+        dto.setMotherName(Optional.ofNullable(student.getMotherName()).orElse("N/A"));
+        dto.setMotherMobile(Optional.ofNullable(student.getMotherMobile()).orElse("0000000000"));
+        dto.setMotherOccupation(Optional.ofNullable(student.getMotherOccupation()).orElse("N/A"));
+
+        dto.setAadharNumber(Optional.ofNullable(student.getAadharNumber()).orElse("N/A"));
+
+        // School / Hostel Info
+        dto.setSchoolName(Optional.ofNullable(student.getSchoolName()).orElse("N/A"));
+        dto.setHostelBusService(Optional.ofNullable(student.getHostelBusService()).orElse("N/A"));
+        dto.setBoardingPoint(Optional.ofNullable(student.getBoardingPoint()).orElse("N/A"));
+
+        // Dates (keep null if not available)
+        dto.setDateOfBirth(student.getDateOfBirth());
+        dto.setAdmission_date(student.getAdmission_date());
+        dto.setCreated_at(student.getCreated_at());
+        dto.setUpdated_at(student.getUpdated_at());
+
+        // File Paths (keep null if not available)
+        dto.setProfileImagePath(Optional.ofNullable(student.getProfileImagePath()).orElse("/uploads/default/profile.png"));
+        dto.setMarksheetImagePath10th(Optional.ofNullable(student.getMarksheetImagePath10th()).orElse("/uploads/default/marksheet10th.png"));
+        dto.setMarksheetImagePath12th(Optional.ofNullable(student.getMarksheetImagePath12th()).orElse("/uploads/default/marksheet12th.png"));
+        dto.setUgCertificate(Optional.ofNullable(student.getUgCertificate()).orElse("/uploads/default/ugCertificate.png"));
+
+        // Username
+        dto.setUsername(student.getUser() != null
+                ? Optional.ofNullable(student.getUser().getUsername()).orElse("unknown_user")
+                : "unknown_user");
 
         return dto;
     }

@@ -88,7 +88,6 @@ public class HodController {
             @PathVariable Long id,
             @RequestPart("student") StudentUpdateRequestDto dto, // JSON part
             @RequestPart(required = false) MultipartFile profileImage,
-            @RequestPart(required = false) MultipartFile marksheetImage,
             @RequestPart(required = false) MultipartFile marksheetImage10th,
             @RequestPart(required = false) MultipartFile marksheetImage12th,
             @RequestPart(required = false) MultipartFile ugCertificate) {

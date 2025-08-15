@@ -15,6 +15,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -100,7 +102,6 @@ public class AdminController {
 
             // Academic details
             @RequestParam(required = false) String programmeLevel,
-            @RequestParam(required = false) String programmeOfStudy,
             @RequestParam(required = false) String schoolName,
             @RequestParam(required = false) String ugCertificate,
 
@@ -126,9 +127,9 @@ public class AdminController {
             @RequestParam(required = false) String hostelBusService,
             @RequestParam(required = false) String boardingPoint,
             @RequestParam(required = false) String aadharNumber,
-            @RequestParam(required = false) LocalDate admission_date,
-            @RequestParam(required = false) LocalDate created_at,
-            @RequestParam(required = false) LocalDate updated_at,
+            @RequestParam(required = false) OffsetDateTime  admission_date,
+            @RequestParam(required = false) OffsetDateTime  created_at,
+            @RequestParam(required = false) OffsetDateTime updated_at,
             @RequestParam(required = false) String enrollment_status,
 
             // Multipart files
@@ -158,7 +159,6 @@ public class AdminController {
 
         // Academic details
         dto.setProgrammeLevel(programmeLevel);
-        dto.setProgrammeOfStudy(programmeOfStudy);
         dto.setSchoolName(schoolName);
         dto.setUgCertificate(ugCertificate);
 
@@ -166,9 +166,7 @@ public class AdminController {
         dto.setStreet(street);
         dto.setTaluk(taluk);
         dto.setCity(city);
-        dto.setState(state);
         dto.setPincode(pincode);
-        dto.setCountry(country);
 
         // Parent / guardian
         dto.setFatherName(fatherName);

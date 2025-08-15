@@ -8,6 +8,8 @@ import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -50,25 +52,21 @@ public class StudentResDto {
 
     private LocalDate dateOfBirth;
 
-    private String address;
-
     private String city;
-
-    private String state;
 
     private String pincode;
 
-    private String country;
+    private String district;
 
-    private LocalDate admission_date;
+    private OffsetDateTime admission_date;
 
     private String guardianName;
 
     private String guardian_phone;
 
-    private LocalDate created_at;
+    private OffsetDateTime  created_at;
 
-    private LocalDate updated_at;
+    private OffsetDateTime  updated_at;
 
     private String enrollment_status;
 
@@ -79,8 +77,6 @@ public class StudentResDto {
     private String lastName;
 
     private String programmeLevel;
-
-    private String programmeOfStudy;
 
     private String aadharNumber;
 

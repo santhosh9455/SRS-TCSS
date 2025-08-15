@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -79,12 +81,13 @@ public class HodServiceImp implements HodService {
         }
 
         // 4. Check if already approved
-        if (student.getStatus() == StatusEnum.APPROVED) {
+        if (Objects.equals(student.getEnrollment_status(), "APPROVED")) {
             throw new RuntimeException("Student " + student.getFirstName() + " is already approved.");
         }
 
         // 5. Approve and save
         student.setStatus(StatusEnum.APPROVED);
+        student.setEnrollment_status("APPROVED");
         StudentEntity saved = studentRepo.save(student);
 
         // 6. Send notification
@@ -100,62 +103,46 @@ public class HodServiceImp implements HodService {
         return mapToDto(saved);
     }
 
-    private StudentResDto mapToDto(StudentEntity entity) {
+    private StudentResDto mapToDto(StudentEntity student) {
         StudentResDto dto = new StudentResDto();
 
-        if (entity == null) {
+        if (student == null) {
             return dto;
         }
 
-        dto.setId(entity.getId());
-        dto.setAge(entity.getAge());
-        dto.setDateOfBirth(entity.getDateOfBirth());
-        dto.setGender(entity.getGender());
-        dto.setEmail(entity.getEmail());
-        dto.setPhoneNumber(entity.getPhoneNumber());
-        dto.setStatus(entity.getStatus() != null ? entity.getStatus().toString() : "PENDING");
+        // Basic Info
+        dto.setId(student.getId() != null ? student.getId() : 0L);
+        dto.setFirstName(Optional.ofNullable(student.getFirstName()).orElse("Unknown"));
+        dto.setLastName(Optional.ofNullable(student.getLastName()).orElse("Unknown"));
+        dto.setAge(Optional.ofNullable(student.getAge()).orElse(0));
+        dto.setGender(Optional.ofNullable(student.getGender()).orElse("Not Specified"));
+        dto.setEmail(Optional.ofNullable(student.getEmail()).orElse("no-email@example.com"));
+        dto.setPhoneNumber(Optional.ofNullable(student.getPhoneNumber()).orElse("0000000000"));
 
         // Department
-        if (entity.getDepartment() != null) {
-            dto.setDepartmentName(entity.getDepartment().getDepartmentName());
-            dto.setDepartmentId(entity.getDepartment().getId());
-        } else {
-            dto.setDepartmentName("Not Assigned");
-            dto.setDepartmentId(null);
-        }
+        dto.setDepartmentId(student.getDepartment() != null ? student.getDepartment().getId() : null);
+        dto.setDepartmentName(student.getDepartment() != null
+                ? student.getDepartment().getDepartmentName()
+                : "Not Assigned");
 
-        // Username
-        if (entity.getUser() != null && entity.getUser().getUsername() != null) {
-            dto.setUsername(entity.getUser().getUsername());
-        } else {
-            dto.setUsername("Not Found");
-        }
+        // Programme Level
+        dto.setProgrammeLevel(Optional.ofNullable(student.getProgrammeLevel()).orElse("Not Specified"));
 
         // Course
-        if (entity.getCourse() != null) {
-            dto.setCourseName(entity.getCourse().getCourseName());
-            dto.setCourseId(entity.getCourse().getId());
-        } else {
-            dto.setCourseName("Not Assigned");
-            dto.setCourseId(null);
-        }
-
-        dto.setCourseStatus(entity.getCourseStatus() != null
-                ? entity.getCourseStatus().name()
+        dto.setCourseId(student.getCourse() != null ? student.getCourse().getId() : null);
+        dto.setCourseName(student.getCourseStatus() != null
+                ? student.getCourseStatus().name()
                 : "NOT_REQUESTED");
 
-        // Files
-        dto.setProfileImagePath(entity.getProfileImagePath());
-
-        // Subjects
-        if (entity.getSubjects() != null && !entity.getSubjects().isEmpty()) {
-            List<String> subjectNames = entity.getSubjects().stream()
+        // Subject
+        if (student.getSubjects() != null && !student.getSubjects().isEmpty()) {
+            List<String> subjectNames = student.getSubjects().stream()
                     .map(SubjectEntity::getSubjectName)
                     .filter(Objects::nonNull)
                     .toList();
             dto.setSubjectName(subjectNames);
 
-            List<Long> subjectIds = entity.getSubjects().stream()
+            List<Long> subjectIds = student.getSubjects().stream()
                     .map(SubjectEntity::getId)
                     .filter(Objects::nonNull)
                     .toList();
@@ -164,19 +151,52 @@ public class HodServiceImp implements HodService {
             dto.setSubjectName(Collections.singletonList("Not Assigned"));
             dto.setSubjectId(Collections.emptyList());
         }
+        // Status
+        dto.setStatus(Optional.ofNullable(student.getStatus()).map(Enum::toString).orElse("PENDING"));
+        dto.setEnrollment_status(Optional.ofNullable(student.getEnrollment_status()).orElse("PENDING"));
 
-        // Extra fields from StudentUpdateRequestDto if available
-        dto.setFirstName(entity.getFirstName());
-        dto.setLastName(entity.getLastName());
-        dto.setFatherName(entity.getFatherName());
-        dto.setMotherName(entity.getMotherName());
-        dto.setGuardianName(entity.getGuardianName());
-        dto.setStreet(entity.getStreet());
-        dto.setCity(entity.getCity());
-        dto.setState(entity.getState());
-        dto.setPincode(entity.getPincode());
-        dto.setCountry(entity.getCountry());
-        dto.setAdmission_date(entity.getAdmission_date());
+        // Address
+        dto.setStreet(Optional.ofNullable(student.getStreet()).orElse("N/A"));
+        dto.setTaluk(Optional.ofNullable(student.getTaluk()).orElse("N/A"));
+        dto.setCity(Optional.ofNullable(student.getCity()).orElse("N/A"));
+        dto.setPincode(Optional.ofNullable(student.getPincode()).orElse("000000"));
+        dto.setDistrict(Optional.ofNullable(student.getDistrict()).orElse("N/A"));
+        // Guardian
+        dto.setGuardianName(Optional.ofNullable(student.getGuardianName()).orElse("N/A"));
+        dto.setGuardian_phone(Optional.ofNullable(student.getGuardian_phone()).orElse("0000000000"));
+
+        // Parent Info
+        dto.setFatherName(Optional.ofNullable(student.getFatherName()).orElse("N/A"));
+        dto.setFatherMobile(Optional.ofNullable(student.getFatherMobile()).orElse("0000000000"));
+        dto.setFatherOccupation(Optional.ofNullable(student.getFatherOccupation()).orElse("N/A"));
+
+        dto.setMotherName(Optional.ofNullable(student.getMotherName()).orElse("N/A"));
+        dto.setMotherMobile(Optional.ofNullable(student.getMotherMobile()).orElse("0000000000"));
+        dto.setMotherOccupation(Optional.ofNullable(student.getMotherOccupation()).orElse("N/A"));
+
+        dto.setAadharNumber(Optional.ofNullable(student.getAadharNumber()).orElse("N/A"));
+
+        // School / Hostel Info
+        dto.setSchoolName(Optional.ofNullable(student.getSchoolName()).orElse("N/A"));
+        dto.setHostelBusService(Optional.ofNullable(student.getHostelBusService()).orElse("N/A"));
+        dto.setBoardingPoint(Optional.ofNullable(student.getBoardingPoint()).orElse("N/A"));
+
+        // Dates (keep null if not available)
+        dto.setDateOfBirth(student.getDateOfBirth());
+        dto.setAdmission_date(student.getAdmission_date());
+        dto.setCreated_at(student.getCreated_at());
+        dto.setUpdated_at(student.getUpdated_at());
+
+        // File Paths (keep null if not available)
+        dto.setProfileImagePath(Optional.ofNullable(student.getProfileImagePath()).orElse("/uploads/default/profile.png"));
+        dto.setMarksheetImagePath10th(Optional.ofNullable(student.getMarksheetImagePath10th()).orElse("/uploads/default/marksheet10th.png"));
+        dto.setMarksheetImagePath12th(Optional.ofNullable(student.getMarksheetImagePath12th()).orElse("/uploads/default/marksheet12th.png"));
+        dto.setUgCertificate(Optional.ofNullable(student.getUgCertificate()).orElse("/uploads/default/ugCertificate.png"));
+
+        // Username
+        dto.setUsername(student.getUser() != null
+                ? Optional.ofNullable(student.getUser().getUsername()).orElse("unknown_user")
+                : "unknown_user");
 
         return dto;
     }
@@ -239,12 +259,13 @@ public class HodServiceImp implements HodService {
         }
 
         // Step 4: Check if already rejected
-        if (student.getStatus() == StatusEnum.REJECTED) {
+        if (Objects.equals(student.getEnrollment_status(), "REJECTED")) {
             throw new RuntimeException("Student " + student.getFirstName() + " is already rejected.");
         }
 
         // Step 5: Reject and save
         student.setStatus(StatusEnum.REJECTED);
+        student.setEnrollment_status("REJECTED");
         StudentEntity saved = studentRepo.save(student);
 
         // Step 6: Send email
@@ -996,7 +1017,6 @@ public class HodServiceImp implements HodService {
         if (dto.getFirstName() != null) student.setFirstName(dto.getFirstName());
         if (dto.getLastName() != null) student.setLastName(dto.getLastName());
         if (dto.getProgrammeLevel() != null) student.setProgrammeLevel(dto.getProgrammeLevel());
-        if (dto.getProgrammeOfStudy() != null) student.setProgrammeOfStudy(dto.getProgrammeOfStudy());
 
         if (dto.getDateOfBirth() != null) {
             student.setDateOfBirth(dto.getDateOfBirth());
@@ -1020,11 +1040,9 @@ public class HodServiceImp implements HodService {
         // ---- ADDRESS ----
         if (dto.getStreet() != null) student.setStreet(dto.getStreet());
         if (dto.getCity() != null) student.setCity(dto.getCity());
-        if (dto.getState() != null) student.setState(dto.getState());
-        if (dto.getCountry() != null) student.setCountry(dto.getCountry());
         if (dto.getPincode() != null) student.setPincode(dto.getPincode());
         if (dto.getTaluk() != null) student.setTaluk(dto.getTaluk());
-
+        if (dto.getDistrict() != null) student.setDistrict(dto.getDistrict());
         // ---- EDUCATIONAL DETAILS ----
         if (dto.getSchoolName() != null) student.setSchoolName(dto.getSchoolName());
         if (dto.getHostelBusService() != null) student.setHostelBusService(dto.getHostelBusService());
@@ -1087,7 +1105,7 @@ public class HodServiceImp implements HodService {
             throw new RuntimeException("Failed to store updated images", e);
         }
 
-        student.setUpdated_at(LocalDate.now());
+        student.setUpdated_at(OffsetDateTime.now());
 
         StudentEntity updatedStudent = studentRepo.save(student);
         return mapToDto(updatedStudent);

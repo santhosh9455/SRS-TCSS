@@ -7,7 +7,10 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.List;
+import java.util.Optional;
 
 @Data
 @AllArgsConstructor
@@ -19,7 +22,6 @@ public class StudentUpdateRequestDto {
     private String firstName;
     private String lastName;
     private String programmeLevel;
-    private String programmeOfStudy;
     private String aadharNumber;
     private String fatherName;
     private String fatherMobile;
@@ -34,14 +36,13 @@ public class StudentUpdateRequestDto {
     private String boardingPoint;
     private String marksheetImagePath12th;
     private String city;
-    private String state;
     private String pincode;
-    private String country;
-    private LocalDate admission_date;
+    private String district;
+    private OffsetDateTime admission_date;
     private String guardianName;
     private String guardian_phone;
-    private LocalDate created_at;
-    private LocalDate updated_at;
+    private OffsetDateTime  created_at;
+    private OffsetDateTime  updated_at;
     private String enrollment_status;
     private String marksheetImagePath10th;
     private String ugCertificate;

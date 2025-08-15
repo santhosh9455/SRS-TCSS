@@ -11,6 +11,8 @@ import lombok.ToString;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +29,7 @@ public class StudentEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+
     private Integer age;
     private LocalDate dateOfBirth;
     private String gender;
@@ -43,8 +46,6 @@ public class StudentEntity {
     private String lastName;
 
     private String programmeLevel;
-
-    private String programmeOfStudy;
 
     private String aadharNumber;
 
@@ -64,6 +65,8 @@ public class StudentEntity {
 
     private String taluk;
 
+    private String district;
+
     private String schoolName;
 
     private String hostelBusService;
@@ -74,23 +77,19 @@ public class StudentEntity {
 
     private String city;
 
-    private String state;
-
     private String pincode;
 
-    private String country;
-
-    private LocalDate admission_date;
+    private OffsetDateTime admission_date;
 
     private String guardianName;
 
     private String guardian_phone;
 
-    private LocalDate created_at;
+    private OffsetDateTime   created_at;
 
-    private LocalDate updated_at;
+    private OffsetDateTime  updated_at;
 
-    private String enrollment_status;
+    private String enrollment_status = "PENDING";
 
     private String  marksheetImagePath10th;
 

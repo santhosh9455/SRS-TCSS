@@ -24,6 +24,8 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.OffsetDateTime;
 import java.time.Period;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -110,7 +112,7 @@ public class StudentServiceImp implements StudentService {
 
         // Academic Info
         dto.setProgrammeLevel(student.getProgrammeLevel());
-        dto.setProgrammeOfStudy(student.getProgrammeOfStudy());
+
         dto.setAadharNumber(student.getAadharNumber());
 
         // Parents / Guardian Info
@@ -127,9 +129,7 @@ public class StudentServiceImp implements StudentService {
         dto.setStreet(student.getStreet());
         dto.setTaluk(student.getTaluk());
         dto.setCity(student.getCity());
-        dto.setState(student.getState());
         dto.setPincode(student.getPincode());
-        dto.setCountry(student.getCountry());
 
         // Other Info
         dto.setSchoolName(student.getSchoolName());
@@ -328,6 +328,7 @@ public class StudentServiceImp implements StudentService {
 
     @Override
     public StudentResDto RegisterRequest(StudentRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage10th, MultipartFile marksheetImage12th, MultipartFile ugCertificate) {
+        // File validation
         if (profileImage == null || profileImage.isEmpty()) {
             throw new IllegalArgumentException("Profile image is required");
         }
@@ -342,88 +343,133 @@ public class StudentServiceImp implements StudentService {
         DepartmentEntity dept = deptRepo.findById(dto.getDepartmentId())
                 .orElseThrow(() -> new RuntimeException("Department '" + dto.getDepartmentId() + "' not found"));
 
-        int age = 0;
-        if (dto.getDateOfBirth() != null) {
-            age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
-        }
+        // Calculate age
+        int age = (dto.getDateOfBirth() != null)
+                ? Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears()
+                : 0;
 
         StudentEntity student = new StudentEntity();
         student.setAge(age);
-        student.setFirstName(dto.getFirstName());
-        student.setFatherName(dto.getFatherName());
-        student.setLastName(dto.getLastName());
-        student.setFatherMobile(dto.getFatherMobile());
-        student.setMotherName(dto.getMotherName());
-        student.setMotherMobile(dto.getMotherMobile());
+        student.setFirstName(defaultIfBlank(dto.getFirstName(), "Not Provided"));
+        student.setLastName(defaultIfBlank(dto.getLastName(), "Not Provided"));
+        student.setFatherName(defaultIfBlank(dto.getFatherName(), "Not Provided"));
+        student.setFatherMobile(defaultIfBlank(dto.getFatherMobile(), "Not Provided"));
+        student.setFatherOccupation(defaultIfBlank(dto.getFatherOccupation(), "Not Provided"));
+        student.setMotherName(defaultIfBlank(dto.getMotherName(), "Not Provided"));
+        student.setMotherMobile(defaultIfBlank(dto.getMotherMobile(), "Not Provided"));
+        student.setMotherOccupation(defaultIfBlank(dto.getMotherOccupation(), "Not Provided"));
         student.setDateOfBirth(dto.getDateOfBirth());
-        student.setGender(dto.getGender());
-        student.setEmail(dto.getEmail());
-        student.setCity(dto.getCity());
-        student.setState(dto.getState());
-        student.setPincode(dto.getPincode());
-        student.setCountry(dto.getCountry());
-        student.setGuardianName(dto.getGuardianName());
-        student.setGuardian_phone(dto.getGuardianPhone());
-        student.setEnrollment_status("PENDDING");
-        student.setAdmission_date(LocalDate.now());
-        student.setPhoneNumber(dto.getPhoneNumber());
+        student.setGender(defaultIfBlank(dto.getGender(), "Not Specified"));
+        student.setEmail(defaultIfBlank(dto.getEmail(), "noemail@example.com"));
+        student.setPhoneNumber(defaultIfBlank(dto.getPhoneNumber(), "Not Provided"));
+        student.setProgrammeLevel(defaultIfBlank(dto.getProgrammeLevel(), "Not Specified"));
+        student.setAadharNumber(defaultIfBlank(dto.getAadharNumber(), "Not Provided"));
+        student.setCity(defaultIfBlank(dto.getCity(), "Not Provided"));
+        student.setPincode(defaultIfBlank(dto.getPincode(), "000000"));
+        student.setStreet(defaultIfBlank(dto.getStreet(), "Not Provided"));
+        student.setTaluk(defaultIfBlank(dto.getTaluk(), "Not Provided"));
+        student.setSchoolName(defaultIfBlank(dto.getSchoolName(), "Not Provided"));
+        student.setHostelBusService(defaultIfBlank(dto.getHostelBusService(), "Not Provided"));
+        student.setBoardingPoint(defaultIfBlank(dto.getBoardingPoint(), "Not Provided"));
+        student.setGuardianName(defaultIfBlank(dto.getGuardianName(), "Not Provided"));
+        student.setGuardian_phone(defaultIfBlank(dto.getGuardianPhone(), "Not Provided"));
+        student.setEnrollment_status(defaultIfBlank(dto.getEnrollmentStatus(), "PENDING"));
+        student.setAdmission_date(OffsetDateTime.now());
+        student.setCourseStatus(CourseRequestStatusEnum.NOT_REQUESTED);
         student.setDepartment(dept);
-        student.setCreated_at(LocalDate.now());
-        student.setUpdated_at(LocalDate.now());
 
         try {
             String uploadDir = "uploads/students/";
             Files.createDirectories(Paths.get(uploadDir));
 
             // Save profile image
-            String profileImageName = "profile_" + UUID.randomUUID() + getFileExtension(profileImage.getOriginalFilename());
-            Path profileImagePath = Paths.get(uploadDir + profileImageName);
-            Files.copy(profileImage.getInputStream(), profileImagePath, StandardCopyOption.REPLACE_EXISTING);
-            student.setProfileImagePath("/" + uploadDir + profileImageName);
+            student.setProfileImagePath("/" + uploadDir + saveFile(profileImage, "profile_"));
+            student.setMarksheetImagePath10th("/" + uploadDir + saveFile(marksheetImage10th, "marksheet10th_"));
+            student.setMarksheetImagePath12th("/" + uploadDir + saveFile(marksheetImage12th, "marksheet12th_"));
 
-            // Save 10th marksheet
-            String marksheet10thName = "marksheet10th_" + UUID.randomUUID() + getFileExtension(marksheetImage10th.getOriginalFilename());
-            Path marksheet10thPath = Paths.get(uploadDir + marksheet10thName);
-            Files.copy(marksheetImage10th.getInputStream(), marksheet10thPath, StandardCopyOption.REPLACE_EXISTING);
-            student.setMarksheetImagePath10th("/" + uploadDir + marksheet10thName);
-
-            // Save 12th marksheet
-            String marksheet12thName = "marksheet12th_" + UUID.randomUUID() + getFileExtension(marksheetImage12th.getOriginalFilename());
-            Path marksheet12thPath = Paths.get(uploadDir + marksheet12thName);
-            Files.copy(marksheetImage12th.getInputStream(), marksheet12thPath, StandardCopyOption.REPLACE_EXISTING);
-            student.setMarksheetImagePath12th("/" + uploadDir + marksheet12thName);
-
-            // Save UG certificate if provided
             if (ugCertificate != null && !ugCertificate.isEmpty()) {
-                String ugCertName = "ugCertificate_" + UUID.randomUUID() + getFileExtension(ugCertificate.getOriginalFilename());
-                Path ugCertPath = Paths.get(uploadDir + ugCertName);
-                Files.copy(ugCertificate.getInputStream(), ugCertPath, StandardCopyOption.REPLACE_EXISTING);
-                student.setUgCertificate("/" + uploadDir + ugCertName);
+                student.setUgCertificate("/" + uploadDir + saveFile(ugCertificate, "ugCertificate_"));
             }
-
         } catch (IOException e) {
             throw new RuntimeException("Failed to store student documents", e);
         }
 
         StudentEntity savedStudent = studentRepo.save(student);
 
-        // Email to student
-        emailService.sendSimpleEmail(
-                savedStudent.getEmail(),
-                "Your Registration Request was successfully sent",
-                "Hi " + savedStudent.getFirstName() + ",\n\n" +
-                        "Your registration request has been successfully submitted to the HOD. " +
-                        "You will be notified once it's approved.\n\nBest Regards,\nAdmin"
+        System.out.println("Email sending.....");
+        // Email to student (HTML)
+        String studentEmailBody = String.format(
+                """
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color: teal;">Registration Request Submitted Successfully</h2>
+                    <p>Dear <strong>%s</strong>,</p>
+                    <p>We have received your registration request for the academic programme <strong>%s</strong>.</p>
+                    <p><b>Submission Date:</b> %s</p>
+                    <p>Our HOD will review your application and get back to you shortly.</p>
+                    <br>
+                    <p>Best Regards,<br>Admin Team</p>
+                </body>
+                </html>
+                """,
+                savedStudent.getFirstName(),
+                savedStudent.getProgrammeLevel(),
+                OffsetDateTime.now().toLocalDate()
         );
 
-        // Email to HOD
-        emailService.sendSimpleEmail(
-                "santhoshkumar@dbcyelagiri.edu.in",
-                savedStudent.getFirstName() + " sent a registration request",
-                "Student " + savedStudent.getFirstName() + " has requested registration.\nPlease review and approve it."
+        emailService.sendHtmlEmail(
+                savedStudent.getEmail(),
+                "Registration Request Received",
+                studentEmailBody
         );
+
+        // Email to HOD (HTML)
+        String hodEmailBody = String.format(
+                """
+                <html>
+                <body style="font-family: Arial, sans-serif;">
+                    <h2 style="color: navy;">New Student Registration Request</h2>
+                    <p>A new Application request has been submitted:</p>
+                    <ul>
+                        <li><b>Name:</b> %s %s</li>
+                        <li><b>Programme:</b> %s</li>
+                        <li><b>Submitted On:</b> %s</li>
+                    </ul>
+                    <p>Please review and process this request.</p>
+                    <br>
+                    <p>Best Regards,<br>System Notification</p>
+                </body>
+                </html>
+                """,
+                savedStudent.getFirstName(),
+                savedStudent.getLastName(),
+                savedStudent.getProgrammeLevel(),
+                OffsetDateTime.now().toLocalDate()
+        );
+
+        emailService.sendHtmlEmail(
+                "santhoshkumar@dbcyelagiri.edu.in",
+                "New Student Registration Request",
+                hodEmailBody
+        );
+
+        System.out.println("Email Completed.....");
 
         return mapToDto(savedStudent);
+    }
+
+    // Utility to save file
+    private String saveFile(MultipartFile file, String prefix) throws IOException {
+        String uploadDir = "uploads/students/";
+        String fileName = prefix + UUID.randomUUID() + getFileExtension(file.getOriginalFilename());
+        Path filePath = Paths.get(uploadDir + fileName);
+        Files.copy(file.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+        return fileName;
+    }
+
+    // Utility for default values
+    private String defaultIfBlank(String value, String defaultVal) {
+        return (value == null || value.trim().isEmpty()) ? defaultVal : value.trim();
     }
 
     private CourseResDto mapToDto(CourseEntity course) {
@@ -475,58 +521,97 @@ public class StudentServiceImp implements StudentService {
         }
 
         StudentResDto dto = new StudentResDto();
-        dto.setId(student.getId());
-        dto.setDateOfBirth(student.getDateOfBirth());
-        dto.setAge(student.getAge());
-        dto.setGender(student.getGender());
-        dto.setEmail(student.getEmail());
-        dto.setPhoneNumber(student.getPhoneNumber());
 
-        // Department check
+        // Basic Info
+        dto.setId(student.getId() != null ? student.getId() : 0L);
+        dto.setFirstName(Optional.ofNullable(student.getFirstName()).orElse("Unknown"));
+        dto.setLastName(Optional.ofNullable(student.getLastName()).orElse("Unknown"));
+        dto.setAge(Optional.ofNullable(student.getAge()).orElse(0));
+        dto.setGender(Optional.ofNullable(student.getGender()).orElse("Not Specified"));
+        dto.setEmail(Optional.ofNullable(student.getEmail()).orElse("no-email@example.com"));
+        dto.setPhoneNumber(Optional.ofNullable(student.getPhoneNumber()).orElse("0000000000"));
+
+        // Department
+        dto.setDepartmentId(student.getDepartment() != null ? student.getDepartment().getId() : null);
         dto.setDepartmentName(student.getDepartment() != null
                 ? student.getDepartment().getDepartmentName()
                 : "Not Assigned");
 
-        // Status check
-        dto.setStatus(student.getStatus() != null
-                ? student.getStatus().toString()
-                : "PENDING");
+        // Programme Level
+        dto.setProgrammeLevel(Optional.ofNullable(student.getProgrammeLevel()).orElse("Not Specified"));
 
-        // Course status
+        // Course
+        dto.setCourseId(student.getCourse() != null ? student.getCourse().getId() : null);
         dto.setCourseName(student.getCourseStatus() != null
                 ? student.getCourseStatus().name()
-                : "NOT_SPECIFIED");
+                : "NOT_REQUESTED");
 
-        // Address fields
-        dto.setStreet(student.getStreet());
-        dto.setTaluk(student.getTaluk());
-        dto.setCity(student.getCity());
-        dto.setState(student.getState());
-        dto.setPincode(student.getPincode());
-        dto.setCountry(student.getCountry());
+        // Subject
+        if (student.getSubjects() != null && !student.getSubjects().isEmpty()) {
+            List<String> subjectNames = student.getSubjects().stream()
+                    .map(SubjectEntity::getSubjectName)
+                    .filter(Objects::nonNull)
+                    .toList();
+            dto.setSubjectName(subjectNames);
 
-        // Guardian details
-        dto.setGuardianName(student.getGuardianName());
-        dto.setGuardian_phone(student.getGuardian_phone());
+            List<Long> subjectIds = student.getSubjects().stream()
+                    .map(SubjectEntity::getId)
+                    .filter(Objects::nonNull)
+                    .toList();
+            dto.setSubjectId(subjectIds);
+        } else {
+            dto.setSubjectName(Collections.singletonList("Not Assigned"));
+            dto.setSubjectId(Collections.emptyList());
+        }
+        // Status
+        dto.setStatus(Optional.ofNullable(student.getStatus()).map(Enum::toString).orElse("PENDING"));
+        dto.setEnrollment_status(Optional.ofNullable(student.getEnrollment_status()).orElse("PENDING"));
 
-        // Dates
+        // Address
+        dto.setStreet(Optional.ofNullable(student.getStreet()).orElse("N/A"));
+        dto.setTaluk(Optional.ofNullable(student.getTaluk()).orElse("N/A"));
+        dto.setCity(Optional.ofNullable(student.getCity()).orElse("N/A"));
+        dto.setPincode(Optional.ofNullable(student.getPincode()).orElse("000000"));
+        dto.setDistrict(Optional.ofNullable(student.getDistrict()).orElse("N/A"));
+        // Guardian
+        dto.setGuardianName(Optional.ofNullable(student.getGuardianName()).orElse("N/A"));
+        dto.setGuardian_phone(Optional.ofNullable(student.getGuardian_phone()).orElse("0000000000"));
+
+        // Parent Info
+        dto.setFatherName(Optional.ofNullable(student.getFatherName()).orElse("N/A"));
+        dto.setFatherMobile(Optional.ofNullable(student.getFatherMobile()).orElse("0000000000"));
+        dto.setFatherOccupation(Optional.ofNullable(student.getFatherOccupation()).orElse("N/A"));
+
+        dto.setMotherName(Optional.ofNullable(student.getMotherName()).orElse("N/A"));
+        dto.setMotherMobile(Optional.ofNullable(student.getMotherMobile()).orElse("0000000000"));
+        dto.setMotherOccupation(Optional.ofNullable(student.getMotherOccupation()).orElse("N/A"));
+
+        dto.setAadharNumber(Optional.ofNullable(student.getAadharNumber()).orElse("N/A"));
+
+        // School / Hostel Info
+        dto.setSchoolName(Optional.ofNullable(student.getSchoolName()).orElse("N/A"));
+        dto.setHostelBusService(Optional.ofNullable(student.getHostelBusService()).orElse("N/A"));
+        dto.setBoardingPoint(Optional.ofNullable(student.getBoardingPoint()).orElse("N/A"));
+
+        // Dates (keep null if not available)
+        dto.setDateOfBirth(student.getDateOfBirth());
         dto.setAdmission_date(student.getAdmission_date());
         dto.setCreated_at(student.getCreated_at());
         dto.setUpdated_at(student.getUpdated_at());
 
-        // Enrollment status
-        dto.setEnrollment_status(student.getEnrollment_status());
-
-        // Document paths
-        dto.setProfileImagePath(student.getProfileImagePath());
-        dto.setMarksheetImagePath10th(student.getMarksheetImagePath10th());
-        dto.setMarksheetImagePath12th(student.getMarksheetImagePath12th());
-        dto.setUgCertificate(student.getUgCertificate());
+        // File Paths (keep null if not available)
+        dto.setProfileImagePath(Optional.ofNullable(student.getProfileImagePath()).orElse("/uploads/default/profile.png"));
+        dto.setMarksheetImagePath10th(Optional.ofNullable(student.getMarksheetImagePath10th()).orElse("/uploads/default/marksheet10th.png"));
+        dto.setMarksheetImagePath12th(Optional.ofNullable(student.getMarksheetImagePath12th()).orElse("/uploads/default/marksheet12th.png"));
+        dto.setUgCertificate(Optional.ofNullable(student.getUgCertificate()).orElse("/uploads/default/ugCertificate.png"));
 
         // Username
-        dto.setUsername(student.getUser() != null ? student.getUser().getUsername() : null);
+        dto.setUsername(student.getUser() != null
+                ? Optional.ofNullable(student.getUser().getUsername()).orElse("unknown_user")
+                : "unknown_user");
 
         return dto;
     }
+
 
 }
