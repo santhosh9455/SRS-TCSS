@@ -826,6 +826,33 @@ public class AdminServiceImp implements AdminService {
         return mapToDto(updated);
     }
 
+    @Override
+    public SubjectResDto createSubject(Long deptId, String subjectName) {
+
+        DepartmentEntity department = deptRepo.findById(deptId)
+                .orElseThrow(()->new RuntimeException("Department not found"));
+
+        // Check if subject already exists in this department
+        SubjectEntity existing = subRepo.findBySubjectNameAndDepartment_DepartmentName(
+                subjectName.toUpperCase(), department.getDepartmentName());
+
+        if (existing != null) {
+            throw new RuntimeException("Subject already exists in your department.");
+        }
+
+        SubjectEntity subject = new SubjectEntity();
+        subject.setSubjectName(subjectName.toUpperCase());
+        subject.setDepartment(department);
+
+        SubjectEntity saved = subRepo.save(subject);
+
+        SubjectResDto resDto = new SubjectResDto();
+        resDto.setId(saved.getId());
+        resDto.setSubjectName(saved.getSubjectName());
+        resDto.setDepartmentName(department.getDepartmentName());
+        return resDto;
+    }
+
     private UsersResDto toResDto(UsersEntity user) {
         UsersResDto dto = new UsersResDto();
         dto.setId(user.getId());

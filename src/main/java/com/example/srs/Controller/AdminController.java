@@ -313,4 +313,10 @@ public class AdminController {
         return ResponseEntity.ok(response);
     }
 
+    @PostMapping("/createSubject")
+    public ResponseEntity<SubjectResDto> createSub(@RequestParam Long deptId , String subjectName) {
+        return ResponseEntity.ok(adminservice.createSubject(deptId,subjectName));
+    }
+
+
 }

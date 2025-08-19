@@ -1,6 +1,7 @@
 package com.example.srs.Service;
 
 import com.example.srs.DTO.*;
+import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.web.multipart.MultipartFile;
@@ -60,4 +61,6 @@ public interface AdminService {
     Page<SubjectResDto> getFilterAllSubjects(String search,Pageable pageable);
 
     StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage, MultipartFile marksheetImage12th, MultipartFile marksheetImage10th, MultipartFile ugCertificateFile);
+
+    SubjectResDto createSubject(Long deptId, String subjectName);
 }
