@@ -104,4 +104,6 @@ public class StudentResDto {
 
     private String  marksheetImagePath10th;
 
+    private String yearOfStudy;
+
 }

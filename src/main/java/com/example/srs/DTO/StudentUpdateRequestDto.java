@@ -58,4 +58,5 @@ public class StudentUpdateRequestDto {
     private String courseStatus;
     private String profileImagePath;
     private String marksheetImagePath;
+    private String yearOfStudy;
 }

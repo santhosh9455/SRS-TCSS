@@ -47,6 +47,8 @@ public class StudentEntity {
 
     private String programmeLevel;
 
+    private String yearOfStudy;
+
     private String aadharNumber;
 
     private String fatherName;

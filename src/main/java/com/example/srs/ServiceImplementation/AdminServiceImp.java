@@ -704,6 +704,7 @@ public class AdminServiceImp implements AdminService {
         // ===== Academic Details =====
         if (dto.getProgrammeLevel() != null) student.setProgrammeLevel(dto.getProgrammeLevel());
 
+        if (dto.getYearOfStudy() != null) student.setYearOfStudy(dto.getYearOfStudy());
         if (dto.getDepartmentId() != null) {
             DepartmentEntity dept = deptRepo.findById(dto.getDepartmentId())
                     .orElseThrow(() -> new RuntimeException("Department not found with ID: " + dto.getDepartmentId()));
@@ -1037,7 +1038,7 @@ public class AdminServiceImp implements AdminService {
 
         // Programme Level
         dto.setProgrammeLevel(Optional.ofNullable(student.getProgrammeLevel()).orElse("Not Specified"));
-
+        dto.setYearOfStudy(Optional.ofNullable(student.getYearOfStudy()).orElse("N/A"));
         // Course
         dto.setCourseId(student.getCourse() != null ? student.getCourse().getId() : null);
         dto.setCourseName(student.getCourseStatus() != null

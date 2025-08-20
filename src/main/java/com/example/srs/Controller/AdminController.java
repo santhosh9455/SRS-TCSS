@@ -102,6 +102,7 @@ public class AdminController {
 
             // Academic details
             @RequestParam(required = false) String programmeLevel,
+            @RequestParam(required = false) String yearOfStudy,
             @RequestParam(required = false) String schoolName,
             @RequestParam(required = false) String ugCertificate,
 
@@ -159,6 +160,7 @@ public class AdminController {
 
         // Academic details
         dto.setProgrammeLevel(programmeLevel);
+        dto.setYearOfStudy(yearOfStudy);
         dto.setSchoolName(schoolName);
         dto.setUgCertificate(ugCertificate);
 
