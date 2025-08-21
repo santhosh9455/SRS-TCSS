@@ -33,6 +33,28 @@ public interface StudentRepo extends JpaRepository<StudentEntity, Long> {
 
 
 
+//    @Query("""
+//  SELECT s FROM StudentEntity s
+//  LEFT JOIN s.department d
+//  LEFT JOIN s.user u
+//  WHERE
+//    (:search IS NULL
+//      OR LOWER(CONCAT(s.firstName, ' ', s.lastName)) LIKE LOWER(CONCAT('%', :search, '%'))
+//      OR (u.username IS NOT NULL AND LOWER(u.username) LIKE LOWER(CONCAT('%', :search, '%')))
+//    )
+//    AND (:departmentId IS NULL OR d.id = :departmentId)
+//    AND (:status IS NULL OR s.status = :status)
+//""")
+//    Page<StudentEntity> findFiltered(
+//            @Param("search") String search,
+//            @Param("departmentId") Long departmentId,
+//            @Param("status") StatusEnum status,
+//            Pageable pageable
+//    );
+
+
+
+
     @Query("""
   SELECT s FROM StudentEntity s
   LEFT JOIN s.department d
@@ -44,13 +66,16 @@ public interface StudentRepo extends JpaRepository<StudentEntity, Long> {
     )
     AND (:departmentId IS NULL OR d.id = :departmentId)
     AND (:status IS NULL OR s.status = :status)
+    AND (:yearOfStudy IS NULL OR s.yearOfStudy = :yearOfStudy)
 """)
     Page<StudentEntity> findFiltered(
             @Param("search") String search,
             @Param("departmentId") Long departmentId,
             @Param("status") StatusEnum status,
+            @Param("yearOfStudy") String yearOfStudy,
             Pageable pageable
     );
+
 
 
 

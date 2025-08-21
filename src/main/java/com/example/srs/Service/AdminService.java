@@ -50,7 +50,7 @@ public interface AdminService {
 
     List<CourseResDto> getAllCourse();
 
-    public Page<StudentResDto> getStudents(String search, Long departmentId, String status, Pageable pageable);
+     Page<StudentResDto> getStudents(String search, Long departmentId, String status,String yearOfStudy,Pageable pageable);
 
     Map<String, String> updateHodPartial(UserProUpdateDto dto);
 
@@ -63,4 +63,6 @@ public interface AdminService {
     StudentResDto updateStudent(Long id, StudentUpdateRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage, MultipartFile marksheetImage12th, MultipartFile marksheetImage10th, MultipartFile ugCertificateFile);
 
     SubjectResDto createSubject(Long deptId, String subjectName);
+
+    StudentResDto getStudentById(Long id);
 }

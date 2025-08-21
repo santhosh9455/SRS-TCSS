@@ -22,12 +22,13 @@ public class StudentReportController {
                             @RequestParam(required = false) String search,
                             @RequestParam(required = false) Long departmentId,
                             @RequestParam(required = false) String status,
+                            @RequestParam(required = false) String yearOfStudy,
                             @RequestParam(defaultValue = "0") int page,
                             @RequestParam(defaultValue = "10") int size)
             throws Exception {
         response.setContentType("application/pdf");
         response.setHeader("Content-Disposition", "attachment; filename=students.pdf");
-        reportService.exportToPdf(response, search, departmentId, status, PageRequest.of(page, size));
+        reportService.exportToPdf(response, search, departmentId, status,yearOfStudy, PageRequest.of(page, size));
     }
 
     @GetMapping("/report/students/excel")
@@ -35,11 +36,12 @@ public class StudentReportController {
                               @RequestParam(required = false) String search,
                               @RequestParam(required = false) Long departmentId,
                               @RequestParam(required = false) String status,
+                              @RequestParam(required = false) String yearOfStudy,
                               @RequestParam(defaultValue = "0") int page,
                               @RequestParam(defaultValue = "10") int size) throws IOException {
         response.setContentType("application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
         response.setHeader("Content-Disposition", "attachment; filename=students.xlsx");
-        reportService.exportToExcel(response,search, departmentId, status, PageRequest.of(page, size));
+        reportService.exportToExcel(response,search, departmentId, status,yearOfStudy, PageRequest.of(page, size));
     }
 
     @GetMapping("/report/students/csv")
@@ -47,11 +49,15 @@ public class StudentReportController {
                             @RequestParam(required = false) String search,
                             @RequestParam(required = false) Long departmentId,
                             @RequestParam(required = false) String status,
+                            @RequestParam(required = false) String yearOfStudy,
                             @RequestParam(defaultValue = "0") int page,
                             @RequestParam(defaultValue = "10") int size) throws IOException {
         response.setContentType("text/csv");
         response.setHeader("Content-Disposition", "attachment; filename=students.csv");
-        reportService.exportToCsv(response,search, departmentId, status, PageRequest.of(page, size));
+        reportService.exportToCsv(response,search, departmentId, status,yearOfStudy, PageRequest.of(page, size));
     }
+
+//    @GetMapping("/report/studentNew/excel")
+//    public void downloadNewexcel()
 }
 

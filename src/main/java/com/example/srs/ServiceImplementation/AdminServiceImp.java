@@ -487,7 +487,7 @@ public class AdminServiceImp implements AdminService {
     }
 
     @Override
-    public Page<StudentResDto> getStudents(String search, Long departmentId, String status, Pageable pageable) {
+    public Page<StudentResDto> getStudents(String search, Long departmentId, String status, String yearOfStudy, Pageable pageable) {
         StatusEnum statusEnum = null;
         if (status != null && !status.isBlank()) {
             try {
@@ -497,7 +497,7 @@ public class AdminServiceImp implements AdminService {
             }
         }
 
-        return studentRepo.findFiltered(search, departmentId, statusEnum, pageable)
+        return studentRepo.findFiltered(search, departmentId, statusEnum, yearOfStudy,pageable)
                 .map(this::mapToDto);
     }
 
@@ -852,6 +852,13 @@ public class AdminServiceImp implements AdminService {
         resDto.setSubjectName(saved.getSubjectName());
         resDto.setDepartmentName(department.getDepartmentName());
         return resDto;
+    }
+
+    @Override
+    public StudentResDto getStudentById(Long id) {
+        StudentEntity student = studentRepo.findById(id)
+                .orElseThrow(() -> new RuntimeException("Student not found with id: " + id));
+        return mapToDto(student);
     }
 
     private UsersResDto toResDto(UsersEntity user) {

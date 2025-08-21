@@ -291,10 +291,11 @@ public class AdminController {
             @RequestParam(required = false) String search,
             @RequestParam(required = false) Long departmentId,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) String yearOfStudy,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size
     ) {
-        return new CustomPageResponse<>(adminservice.getStudents(search, departmentId, status, PageRequest.of(page, size)));
+        return new CustomPageResponse<>(adminservice.getStudents(search, departmentId, status, yearOfStudy,PageRequest.of(page, size)));
     }
 
 
@@ -320,5 +321,9 @@ public class AdminController {
         return ResponseEntity.ok(adminservice.createSubject(deptId,subjectName));
     }
 
+    @GetMapping("/getStudent/{id}")
+    public ResponseEntity<StudentResDto> getStudentById(@PathVariable Long id) {
+        return ResponseEntity.ok(adminservice.getStudentById(id));
+    }
 
 }

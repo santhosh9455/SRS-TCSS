@@ -49,7 +49,7 @@ public class StudentReportServiceImpl implements StudentReportService {
     private DepartmentRepo dept;
 
     @Override
-    public void exportToPdf(HttpServletResponse response, String search, Long departmentId, String status, Pageable pageable) throws Exception {
+    public void exportToPdf(HttpServletResponse response, String search, Long departmentId, String status,String yearOfStudy,Pageable pageable) throws Exception {
 
         // 1. Convert status string to enum
         StatusEnum statusEnum = null;
@@ -62,7 +62,7 @@ public class StudentReportServiceImpl implements StudentReportService {
         }
 
         // 2. Fetch filtered students
-        Page<StudentEntity> students = studentRepo.findFiltered(search, departmentId, statusEnum, pageable);
+        Page<StudentEntity> students = studentRepo.findFiltered(search, departmentId, statusEnum,yearOfStudy,pageable);
 
         // 3. Build filter text to display
         StringBuilder filterText = new StringBuilder();
@@ -146,7 +146,7 @@ public class StudentReportServiceImpl implements StudentReportService {
     }
 
     @Override
-    public void exportToExcel(HttpServletResponse response, String search, Long departmentId, String status, Pageable pageable) throws IOException {
+    public void exportToExcel(HttpServletResponse response, String search, Long departmentId, String status,String yearOfStudy, Pageable pageable) throws IOException {
         StatusEnum statusEnum = null;
         if (status != null && !status.isBlank()) {
             try {
@@ -156,7 +156,7 @@ public class StudentReportServiceImpl implements StudentReportService {
             }
         }
 
-        Page<StudentEntity> students = studentRepo.findFiltered(search, departmentId, statusEnum, pageable);
+        Page<StudentEntity> students = studentRepo.findFiltered(search, departmentId, statusEnum,yearOfStudy, pageable);
 
         List<studentReportDto> dtos = students.stream().map(student -> {
             studentReportDto dto = new studentReportDto();
@@ -228,7 +228,7 @@ public class StudentReportServiceImpl implements StudentReportService {
     }
 
     @Override
-    public void exportToCsv(HttpServletResponse response, String search, Long departmentId, String status, Pageable pageable) throws IOException {
+    public void exportToCsv(HttpServletResponse response, String search, Long departmentId, String status,String yearOfStudy, Pageable pageable) throws IOException {
         StatusEnum statusEnum = null;
         if (status != null && !status.isBlank()) {
             try {
@@ -238,7 +238,7 @@ public class StudentReportServiceImpl implements StudentReportService {
             }
         }
 
-        Page<StudentEntity> students = studentRepo.findFiltered(search, departmentId, statusEnum, pageable);
+        Page<StudentEntity> students = studentRepo.findFiltered(search, departmentId, statusEnum,yearOfStudy, pageable);
 
         List<studentReportDto> dtos = students.stream().map(student -> {
             studentReportDto dto = new studentReportDto();
