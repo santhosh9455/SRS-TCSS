@@ -50,16 +50,17 @@ public class SecurityConfig {
                                 "/swagger-resources/**",
                                 "/webjars/**"
                         ).permitAll()
+                        .requestMatchers("/notify/**").permitAll()
                         .requestMatchers("/uploads/**").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/students/uploadExcel").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/students/registerRequest").permitAll()
                         .requestMatchers(HttpMethod.POST, "/api/students/**").permitAll()
                         .requestMatchers("/auth/login").permitAll()
                         .requestMatchers(HttpMethod.GET, "/dept/AllFilterDept").permitAll()
-                        .requestMatchers("/hod", "/uploads/**").hasRole("HOD")
-                        .requestMatchers("/api/students/**", "/uploads/**").hasRole("STUDENT")
-                        .requestMatchers("/staff/**", "/uploads/**").hasRole("STAFF")
-                        .requestMatchers("/admin/**", "/hod", "/dept", "/api/students", "/uploads/**","/attendance/**").hasRole("ADMIN")
+                        .requestMatchers("/hod", "/uploads/**","/notify/**").hasRole("HOD")
+                        .requestMatchers("/api/students/**", "/uploads/**","/notify/**").hasRole("STUDENT")
+                        .requestMatchers("/staff/**", "/uploads/**","/notify/**").hasRole("STAFF")
+                        .requestMatchers("/admin/**", "/hod/**", "/dept/**", "/api/students", "/uploads/**","/attendance/**","/notify/**").hasRole("ADMIN")
                         .anyRequest().authenticated()
                 )
 

@@ -51,6 +51,7 @@ public class StudentRequestDto {
     @NotBlank(message = "Programme Level is Required")
     private String programmeLevel;///////----
 
+    private String yearOfStudy;
 
 
     private Long courseId;

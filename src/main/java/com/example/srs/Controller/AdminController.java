@@ -86,7 +86,6 @@ public class AdminController {
             @PathVariable Long id,
 
             // Basic details
-            @RequestParam(required = false) Integer age,
             @RequestParam(required = false) String firstName,
             @RequestParam(required = false) String lastName,
             @RequestParam(required = false) String gender,
@@ -110,7 +109,7 @@ public class AdminController {
             @RequestParam(required = false) String street,
             @RequestParam(required = false) String taluk,
             @RequestParam(required = false) String city,
-            @RequestParam(required = false) String state,
+            @RequestParam(required = false) String district,
             @RequestParam(required = false) String pincode,
             @RequestParam(required = false) String country,
 
@@ -144,7 +143,7 @@ public class AdminController {
         StudentUpdateRequestDto dto = new StudentUpdateRequestDto();
 
         // Basic details
-        dto.setAge(age);
+
         dto.setFirstName(firstName);
         dto.setLastName(lastName);
         dto.setGender(gender);
@@ -168,6 +167,7 @@ public class AdminController {
         dto.setStreet(street);
         dto.setTaluk(taluk);
         dto.setCity(city);
+        dto.setDistrict(district);
         dto.setPincode(pincode);
 
         // Parent / guardian
@@ -304,14 +304,34 @@ public class AdminController {
 
         StudentRequestDto dto = new StudentRequestDto();
         dto.setDepartmentId(form.getDepartmentId());
+        dto.setFirstName(form.getFirstName());
+        dto.setLastName(form.getLastName());
         dto.setEmail(form.getEmail());
-        dto.setAge(form.getAge());
         dto.setGender(form.getGender());
+        dto.setDateOfBirth(form.getDateOfBirth());
         dto.setPhoneNumber(form.getPhoneNumber());
         dto.setCourseId(form.getCourseId());
+        dto.setProgrammeLevel(form.getProgrammeLevel());
+        dto.setStreet(form.getStreet());
+        dto.setCity(form.getCity());
+        dto.setTaluk(form.getTaluk());
+        dto.setPincode(form.getPincode());
+        dto.setYearOfStudy(form.getYearOfStudy());
         dto.setSubjectId(form.getSubjectId());
+        dto.setDistrict(form.getDistrict());
+        dto.setAadharNumber(form.getAadharNumber());
+        dto.setBoardingPoint(form.getBoardingPoint());
+        dto.setCity(form.getCity());
+        dto.setFatherMobile(form.getFatherMobile());
+        dto.setFatherName(form.getFatherName());
+        dto.setFatherOccupation(form.getFatherOccupation());
+        dto.setMotherName(form.getMotherName());
+        dto.setMotherMobile(form.getMotherMobile());
+        dto.setMotherOccupation(form.getMotherOccupation());
+        dto.setGuardianName(form.getGuardianName());
+        dto.setGuardianPhone(form.getGuardianPhone());
 
-        StudentResDto response = adminservice.RegisterRequest(dto, form.getProfileImage(), form.getMarksheetImage10th());
+        StudentResDto response = adminservice.RegisterRequest(dto, form.getProfileImage(), form.getMarksheetImage10th() , form.getMarksheetImage10th() , form.getUgCertificate());
 
         return ResponseEntity.ok(response);
     }

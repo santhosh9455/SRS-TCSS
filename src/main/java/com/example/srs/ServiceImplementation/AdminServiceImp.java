@@ -597,11 +597,16 @@ public class AdminServiceImp implements AdminService {
     }
 
     @Override
-    public StudentResDto RegisterRequest(StudentRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage) {
+    public StudentResDto RegisterRequest(StudentRequestDto dto, MultipartFile profileImage, MultipartFile marksheetImage10th, MultipartFile marksheetImage12th, MultipartFile ugCertificateFile ) {
         if (profileImage == null || profileImage.isEmpty()) {
             throw new IllegalArgumentException("Profile image is required");
         }
-        if (marksheetImage == null || marksheetImage.isEmpty()) {
+
+        if (marksheetImage10th == null || marksheetImage10th.isEmpty()) {
+            throw new IllegalArgumentException("Marksheet image is required");
+        }
+
+        if (marksheetImage12th == null || marksheetImage12th.isEmpty()) {
             throw new IllegalArgumentException("Marksheet image is required");
         }
 
@@ -610,11 +615,36 @@ public class AdminServiceImp implements AdminService {
 
         // 2. Create and populate StudentEntity
         StudentEntity student = new StudentEntity();
-        student.setAge(dto.getAge());
+        if (dto.getDateOfBirth() != null) {
+            int age = Period.between(dto.getDateOfBirth(), LocalDate.now()).getYears();
+            student.setAge(age);
+            student.setDateOfBirth(dto.getDateOfBirth());
+        }
         student.setGender(dto.getGender());
         student.setEmail(dto.getEmail());
         student.setPhoneNumber(dto.getPhoneNumber());
         student.setDepartment(dept);
+        student.setFirstName(dto.getFirstName());
+        student.setLastName(dto.getLastName());
+        student.setProgrammeLevel(dto.getProgrammeLevel());
+        student.setStreet(dto.getStreet());
+        student.setCity(dto.getCity());
+        student.setTaluk(dto.getTaluk());
+        student.setPincode(dto.getPincode());
+        student.setYearOfStudy(dto.getYearOfStudy());
+        student.setDistrict(dto.getDistrict());
+        student.setAadharNumber(dto.getAadharNumber());
+        student.setBoardingPoint(dto.getBoardingPoint());
+        student.setCity(dto.getCity());
+        student.setFatherMobile(dto.getFatherMobile());
+        student.setFatherName(dto.getFatherName());
+        student.setFatherOccupation(dto.getFatherOccupation());
+        student.setMotherName(dto.getMotherName());
+        student.setMotherMobile(dto.getMotherMobile());
+        student.setMotherOccupation(dto.getMotherOccupation());
+        student.setGuardianName(dto.getGuardianName());
+        student.setGuardian_phone(dto.getGuardianPhone());
+
         if(dto.getCourseId() != null){
             CourseEntity core = courseRepo.findById(dto.getCourseId())
                     .orElseThrow(()->new RuntimeException("Course not found"));
@@ -636,10 +666,24 @@ public class AdminServiceImp implements AdminService {
             student.setProfileImagePath("/" + uploadDir + profileImageName);
 
             // Save marksheet image
-            String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage.getOriginalFilename());
+            String marksheetImageName = "marksheet_" + UUID.randomUUID() + getFileExtension(marksheetImage10th.getOriginalFilename());
             Path marksheetImagePath = Paths.get(uploadDir + marksheetImageName);
-            Files.copy(marksheetImage.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
+            Files.copy(marksheetImage10th.getInputStream(), marksheetImagePath, StandardCopyOption.REPLACE_EXISTING);
             student.setMarksheetImagePath10th("/" + uploadDir + marksheetImageName);
+
+            if (!marksheetImage12th.isEmpty()) {
+                String fileName = "marksheet12th_" + UUID.randomUUID() + getFileExtension(marksheetImage12th.getOriginalFilename());
+                Path filePath = Paths.get(uploadDir + fileName);
+                Files.copy(marksheetImage12th.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setMarksheetImagePath12th("/" + uploadDir + fileName);
+            }
+
+            if (ugCertificateFile != null && !ugCertificateFile.isEmpty()) {
+                String fileName = "ugCertificate_" + UUID.randomUUID() + getFileExtension(ugCertificateFile.getOriginalFilename());
+                Path filePath = Paths.get(uploadDir + fileName);
+                Files.copy(ugCertificateFile.getInputStream(), filePath, StandardCopyOption.REPLACE_EXISTING);
+                student.setUgCertificate("/" + uploadDir + fileName);
+            }
 
         } catch (IOException e) {
             throw new RuntimeException("Failed to store student documents", e);
@@ -687,7 +731,7 @@ public class AdminServiceImp implements AdminService {
             student.setDateOfBirth(dto.getDateOfBirth());
         }
 
-        if (dto.getAge() != null) student.setAge(dto.getAge());
+
         if (dto.getGender() != null && !dto.getGender().isBlank()) student.setGender(dto.getGender());
 
         if (dto.getEmail() != null && !dto.getEmail().isBlank()) {
@@ -733,6 +777,10 @@ public class AdminServiceImp implements AdminService {
         if (dto.getStatus() != null && !dto.getStatus().isBlank()) {
             try {
                 student.setStatus(StatusEnum.valueOf(dto.getStatus().toUpperCase()));
+                if (Objects.equals(dto.getEnrollment_status(), "APPROVED") && Objects.equals(student.getEnrollment_status(), "PENDING")){
+                    student.setCreated_at(OffsetDateTime.now());
+                }
+
             } catch (IllegalArgumentException e) {
                 throw new RuntimeException("Invalid status: " + dto.getStatus());
             }
@@ -1036,6 +1084,7 @@ public class AdminServiceImp implements AdminService {
         dto.setGender(Optional.ofNullable(student.getGender()).orElse("Not Specified"));
         dto.setEmail(Optional.ofNullable(student.getEmail()).orElse("no-email@example.com"));
         dto.setPhoneNumber(Optional.ofNullable(student.getPhoneNumber()).orElse("0000000000"));
+        dto.setCourseStatus(Optional.ofNullable(student.getCourseStatus().toString()).orElse("N/A"));
 
         // Department
         dto.setDepartmentId(student.getDepartment() != null ? student.getDepartment().getId() : null);
@@ -1050,7 +1099,7 @@ public class AdminServiceImp implements AdminService {
         dto.setCourseId(student.getCourse() != null ? student.getCourse().getId() : null);
         dto.setCourseName(student.getCourseStatus() != null
                 ? student.getCourseStatus().name()
-                : "NOT_REQUESTED");
+                : "N/A");
 
         // Subject
         if (student.getSubjects() != null && !student.getSubjects().isEmpty()) {
@@ -1109,7 +1158,7 @@ public class AdminServiceImp implements AdminService {
         dto.setProfileImagePath(Optional.ofNullable(student.getProfileImagePath()).orElse("/uploads/default/profile.png"));
         dto.setMarksheetImagePath10th(Optional.ofNullable(student.getMarksheetImagePath10th()).orElse("/uploads/default/marksheet10th.png"));
         dto.setMarksheetImagePath12th(Optional.ofNullable(student.getMarksheetImagePath12th()).orElse("/uploads/default/marksheet12th.png"));
-        dto.setUgCertificate(Optional.ofNullable(student.getUgCertificate()).orElse("/uploads/default/ugCertificate.png"));
+        dto.setUgCertificate(Optional.ofNullable(student.getUgCertificate()).orElse(null));
 
         // Username
         dto.setUsername(student.getUser() != null

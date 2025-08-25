@@ -1,5 +1,6 @@
 package com.example.srs.Repository;
 
+import com.example.srs.DTO.CustomPageResponse;
 import com.example.srs.Model.SubjectEntity;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
