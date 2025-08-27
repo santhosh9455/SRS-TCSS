@@ -6,6 +6,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 import lombok.ToString;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -30,6 +31,15 @@ public class StaffDto {
 
     @NotBlank(message = "Staff phoneNumber is required")
     private String phoneNumber;
+
+    private OffsetDateTime created_at;
+    private OffsetDateTime  updated_at;
+    private String profileImagePath;
+    private String street;
+    private String taluk;
+    private String district;
+    private String city;
+    private String pincode;
 
     private List<Long> subjectId;
 

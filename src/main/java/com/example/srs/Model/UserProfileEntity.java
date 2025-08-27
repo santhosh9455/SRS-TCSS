@@ -11,6 +11,7 @@ import lombok.ToString;
 
 import java.text.DateFormat;
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.*;
 
 @Entity
@@ -32,9 +33,16 @@ public class UserProfileEntity {
     private String phoneNumber;
     private String gender;
     private Integer age;
-
     private LocalDate dateOfBirth;
 
+    private OffsetDateTime created_at;
+    private OffsetDateTime  updated_at;
+    private String profileImagePath;
+    private String street;
+    private String taluk;
+    private String district;
+    private String city;
+    private String pincode;
 
     @OneToOne
     @JoinColumn(name = "user_id", nullable = true)

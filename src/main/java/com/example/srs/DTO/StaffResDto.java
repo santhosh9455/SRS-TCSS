@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.ToString;
 
 import java.time.LocalDate;
+import java.time.OffsetDateTime;
 import java.util.List;
 
 @Data
@@ -43,4 +44,13 @@ public class StaffResDto {
     private String departmentName; // refer the dept
 
     private String courseName; // Course names handled by this staff
+
+    private OffsetDateTime created_at;
+    private OffsetDateTime  updated_at;
+    private String profileImagePath;
+    private String street;
+    private String taluk;
+    private String district;
+    private String city;
+    private String pincode;
 }

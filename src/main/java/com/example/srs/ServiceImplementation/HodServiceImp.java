@@ -436,6 +436,23 @@ public class HodServiceImp implements HodService {
         staffProfile.setSubjects(subject);
         staffProfile.setDepartment(department);
 
+
+//        try {
+//            String uploadDir = "uploads/staff/";
+//            Files.createDirectories(Paths.get(uploadDir));
+//
+//            // Save profile image
+//            staffProfile.setProfileImagePath("/" + uploadDir + saveFile(profileImage, "profile_"));
+//            staffProfile.setMarksheetImagePath10th("/" + uploadDir + saveFile(marksheetImage10th, "marksheet10th_"));
+//            staffProfile.setMarksheetImagePath12th("/" + uploadDir + saveFile(marksheetImage12th, "marksheet12th_"));
+//
+//            if (ugCertificate != null && !ugCertificate.isEmpty()) {
+//                staffProfile.setUgCertificate("/" + uploadDir + saveFile(ugCertificate, "ugCertificate_"));
+//            }
+//        } catch (IOException e) {
+//            throw new RuntimeException("Failed to store student documents", e);
+//        }
+
         // 5. Optionally assign course
         if (dto.getCourseName() != null && !dto.getCourseName().isBlank()) {
             CourseEntity course = courseRepo.findByCourseName(dto.getCourseName());
